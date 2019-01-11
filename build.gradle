@@ -1,0 +1,100 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+buildscript {
+	ext {
+		springBootVersion = '2.1.0.RELEASE'
+        commonVersion = '0.0.1-SNAPSHOT'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath 'com.google.cloud.tools:appengine-gradle-plugin:1.3.3'
+        classpath 'mysql:mysql-connector-java:8.0.13'
+        classpath 'com.google.cloud.sql:mysql-socket-factory:1.0.11'
+	}
+}
+
+plugins {
+	id 'io.franzbecker.gradle-lombok' version '1.14'
+    id "org.flywaydb.flyway" version "5.2.4"
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.google.cloud.tools.appengine'
+
+lombok {
+	version = '1.18.4'
+	sha256 = ""
+}
+
+group = 'com.thefa.audit'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+	implementation('org.springframework.boot:spring-boot-starter-web')
+	implementation('org.springframework.boot:spring-boot-starter-data-jpa')
+    implementation("com.thefa:common:${commonVersion}")
+    implementation('com.google.cloud:google-cloud-datastore:1.53.0')
+    implementation('com.google.cloud:google-cloud-bigquery:1.53.0')
+    implementation('com.google.cloud:google-cloud-monitoring:1.53.0')
+    implementation("com.google.cloud:google-cloud-pubsub:1.53.0")
+    implementation('com.google.cloud.sql:mysql-socket-factory:1.0.11')
+    implementation('org.modelmapper:modelmapper:2.3.0')
+    implementation('mysql:mysql-connector-java:8.0.13')
+    implementation("org.flywaydb:flyway-core:5.2.4")
+    implementation("com.google.cloud:google-cloud-logging-logback:0.71.0-alpha")
+    testImplementation("org.flywaydb.flyway-test-extensions:flyway-spring-test:5.1.0")
+	testImplementation('org.springframework.boot:spring-boot-starter-test')
+	testImplementation('io.projectreactor:reactor-test')
+    testImplementation('org.testcontainers:testcontainers:1.10.2')
+    testImplementation('org.testcontainers:mysql:1.10.2')
+}
+
+flyway {
+    url = jdbcUrl
+    user = jdbcUsername
+    password  = jdbcPassword
+    validateOnMigrate = false
+    locations = ["classpath:/db/migration", "classpath:/db/develop"]
+}
+
+appengine {
+    deploy {   // deploy configuration
+        stopPreviousVersion = true  // default - stop the current version
+        promote = true              // default - & make this the current version
+        if (profile != "local") {
+            deployables = "build/staged-app/app.${profile}.yaml"
+        }
+    }
+}
+
+processResources {
+    if (profile != "local") {
+        exclude(['**/application.properties', 'db/test/*', '**/logback.xml'])
+        rename("application.${profile}.properties", 'application.properties')
+        rename('logback.cloud.xml', 'logback.xml')
+    }
+    filesMatching('**/*.properties') {
+        filter(ReplaceTokens, tokens: [
+                'project.version': project.version,
+                'jdbcUrl': jdbcUrl,
+                'jdbcUsername': jdbcUsername,
+                'jdbcPassword': jdbcPassword
+        ])
+    }
+    from ('resources') {
+        into 'resources'
+    }
+}

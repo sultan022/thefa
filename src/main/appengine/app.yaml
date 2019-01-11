@@ -1,0 +1,23 @@
+runtime: java
+env: flex
+service: player-audit
+
+runtime_config:  # Optional
+  jdk: openjdk8
+
+handlers:
+- url: /.*
+  script: this field is required, but ignored
+
+endpoints_api_service:
+  name: the-fa-api-dev.appspot.com
+  rollout_strategy: managed
+
+env_variables:
+  COLOR: 'blue'
+
+manual_scaling:
+  instances: 1
+
+resources:
+  memory_gb: 2.3
