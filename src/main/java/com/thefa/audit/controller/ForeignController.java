@@ -2,6 +2,7 @@ package com.thefa.audit.controller;
 
 import com.thefa.audit.dao.bigquery.foundation.FoundationPlayersBQService;
 import com.thefa.audit.dao.bigquery.opta.OptaPlayersBQService;
+import com.thefa.audit.dao.bigquery.pma.PmaExternalPlayersBQService;
 import com.thefa.audit.dao.bigquery.pma.PmaPlayersBQService;
 import com.thefa.audit.dao.bigquery.scout7.Scout7PlayersBQService;
 import com.thefa.audit.dao.service.PlayerService;
@@ -37,6 +38,7 @@ public class ForeignController {
     private final Scout7PlayersBQService scout7PlayersBQService;
     private final PmaPlayersBQService pmaPlayersBQService;
     private final FoundationPlayersBQService foundationPlayersBQService;
+    private final PmaExternalPlayersBQService pmaExternalPlayersBQService;
 
     private final PlayerService playerService;
     private final FanIdService fanIdService;
@@ -47,6 +49,7 @@ public class ForeignController {
                              Scout7PlayersBQService scout7PlayersBQService,
                              PmaPlayersBQService pmaPlayersBQService,
                              FoundationPlayersBQService foundationPlayersBQService,
+                             PmaExternalPlayersBQService pmaExternalPlayersBQService,
                              PlayerService playerService,
                              FanIdService fanIdService,
                              ModelMapper modelMapper) {
@@ -54,6 +57,7 @@ public class ForeignController {
         this.scout7PlayersBQService = scout7PlayersBQService;
         this.pmaPlayersBQService = pmaPlayersBQService;
         this.foundationPlayersBQService = foundationPlayersBQService;
+        this.pmaExternalPlayersBQService = pmaExternalPlayersBQService;
 
         this.playerService = playerService;
         this.fanIdService = fanIdService;
@@ -79,7 +83,12 @@ public class ForeignController {
                     List<PlayerShortDTO> existingPlayers = playerService.searchPlayersWithFanIds(fanIds);
 
                     StreamEx.of(players)
-                            .filter(player -> StreamEx.of(existingPlayers).findFirst(entity -> entity.getFanId().equals(player.getFanId())).isPresent())
+                            .filter(player -> StreamEx.of(existingPlayers).findFirst(entity -> entity.getFanId().equals(player.getFanId()))
+                                    .map(playerShortDTO -> {
+                                        player.setProfileImage(playerShortDTO.getProfileImage());
+                                        return playerShortDTO;
+                                    })
+                                    .isPresent())
                             .forEach(player -> player.setExistsPPS(true));
 
                     return players;
@@ -88,7 +97,7 @@ public class ForeignController {
 
     @ApiOperation(value = "Search for foreign players")
     @PostMapping("/playersSearch")
-    public DeferredResult<List<ForeignPlayerDTO>> searchForeignPlayers (
+    public DeferredResult<List<ForeignPlayerDTO>> searchForeignPlayers(
             @RequestBody ForeignPlayerLookupDTO foreignPlayerLookupDTO) {
 
         if (foreignPlayerLookupDTO.isEmpty()) {
@@ -96,9 +105,10 @@ public class ForeignController {
         }
 
         return DeferredResults.from(StreamEx.of(optaPlayersBQService.findPlayers(foreignPlayerLookupDTO),
-                    scout7PlayersBQService.findPlayers(foreignPlayerLookupDTO),
-                    pmaPlayersBQService.findPlayers(foreignPlayerLookupDTO),
-                    foundationPlayersBQService.findPlayers(foreignPlayerLookupDTO))
+                scout7PlayersBQService.findPlayers(foreignPlayerLookupDTO),
+                pmaPlayersBQService.findPlayers(foreignPlayerLookupDTO),
+                foundationPlayersBQService.findPlayers(foreignPlayerLookupDTO),
+                pmaExternalPlayersBQService.findPlayers(foreignPlayerLookupDTO))
                 .map(CompletableFuture::join)
                 .flatCollection(each -> each)
                 .toListAndThen(CompletableFuture::completedFuture));

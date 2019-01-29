@@ -2,9 +2,9 @@ package com.thefa.audit.model.dto.player.load;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.thefa.audit.model.shared.MaturationStatus;
-import com.thefa.audit.model.shared.VulnerabilityStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotEmpty;
 import java.time.LocalDate;
@@ -19,9 +19,10 @@ public class PlayerStatusUploadDTO {
 
     private MaturationStatus maturationStatus;
 
-    private VulnerabilityStatus vulnerabilityStatus;
-
     private LocalDate maturationDate;
+
+    @Range(min = 1, max = 7)
+    private Integer vulnerabilityStatus;
 
     private LocalDate vulnerabilityDate;
 

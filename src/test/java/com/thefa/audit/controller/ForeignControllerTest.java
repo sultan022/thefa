@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.thefa.audit.config.AbstractIntegrationTest;
 import com.thefa.audit.dao.bigquery.foundation.FoundationPlayersBQService;
 import com.thefa.audit.dao.bigquery.opta.OptaPlayersBQService;
+import com.thefa.audit.dao.bigquery.pma.PmaExternalPlayersBQService;
 import com.thefa.audit.dao.bigquery.pma.PmaPlayersBQService;
 import com.thefa.audit.dao.bigquery.scout7.Scout7PlayersBQService;
 import com.thefa.audit.model.dto.foreign.ForeignPlayerDTO;
@@ -47,6 +48,9 @@ public class ForeignControllerTest extends AbstractIntegrationTest {
     private FoundationPlayersBQService foundationPlayersBQService;
 
     @MockBean
+    private PmaExternalPlayersBQService pmaExternalPlayersBQService;
+
+    @MockBean
     private FanIdService fanIdService;
 
     @Test
@@ -65,11 +69,13 @@ public class ForeignControllerTest extends AbstractIntegrationTest {
         ForeignPlayerDTO scout7Player = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, SCOUT7);
         ForeignPlayerDTO pmaPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, PMA);
         ForeignPlayerDTO internalPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, INTERNAL);
+        ForeignPlayerDTO externalPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, PMA_EXTERNAL);
 
         when(optaPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(optaPlayer)));
         when(scout7PlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(scout7Player)));
         when(pmaPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(pmaPlayer)));
         when(foundationPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(internalPlayer)));
+        when(pmaExternalPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(externalPlayer)));
 
         MvcResult mvcResult = mvc.perform(post("/foreign/playersSearch")
                 .contentType(MediaType.APPLICATION_JSON).content(gson.toJson(VALID_LOOKUP_REQUEST)))
@@ -77,8 +83,8 @@ public class ForeignControllerTest extends AbstractIntegrationTest {
 
         mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(4)))
-                .andExpect(jsonPath("$[*].source", containsInAnyOrder("OPTA", "SCOUT7", "PMA", "INTERNAL")));
+                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$[*].source", containsInAnyOrder("OPTA", "SCOUT7", "PMA", "INTERNAL", "PMA_EXTERNAL")));
 
     }
 
@@ -95,7 +101,7 @@ public class ForeignControllerTest extends AbstractIntegrationTest {
     public void givenPlayerNotExists_whenSearchForFanId_thenReturnExistsFlagNotSet() throws Exception {
 
         FanServicePlayerDTO servicePlayerDTO = new FanServicePlayerDTO();
-        servicePlayerDTO.setFanId(4L);
+        servicePlayerDTO.setFanId(9999999L);
 
         when(fanIdService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(servicePlayerDTO)));
 

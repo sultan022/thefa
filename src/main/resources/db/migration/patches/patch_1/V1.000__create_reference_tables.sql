@@ -58,9 +58,10 @@ create table fa_club
 (
   club_id varchar(50) primary key,
   club_name varchar(255),
-  club_name_abbr varchar(3),
+  club_name_abbr varchar(10),
   club_nickname varchar(255),
   club_city varchar(255),
+  club_country varchar(255),
   club_stadium varchar(255),
   club_website varchar(500),
   year_founded int(4),

@@ -29,6 +29,9 @@ public class Club {
     @Column(name = "club_city")
     private String city;
 
+    @Column(name = "club_country")
+    private String country;
+
     @Column(name = "club_stadium")
     private String stadium;
 

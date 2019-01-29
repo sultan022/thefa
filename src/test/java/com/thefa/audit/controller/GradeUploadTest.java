@@ -43,8 +43,8 @@ public class GradeUploadTest extends AbstractIntegrationTest {
     @Test
     public void loadPlayerGradeTest() {
         Set<PlayerGradeUploadDTO> gradePayload = new HashSet<>();
-        gradePayload.add(new PlayerGradeUploadDTO("11", "B*"));
-        gradePayload.add(new PlayerGradeUploadDTO("222", "A"));
+        gradePayload.add(new PlayerGradeUploadDTO("11", "B1"));
+        gradePayload.add(new PlayerGradeUploadDTO("222", "A1"));
 
         ApiResponse<Long> response = playerController.loadPlayersGrade(gradePayload);
 
@@ -53,18 +53,18 @@ public class GradeUploadTest extends AbstractIntegrationTest {
         assertEquals(Long.valueOf(2), response.getData());
 
         Player player = entityManager.find(Player.class, 1l);
-        assertEquals("B*", player.getPlayerGrade());
+        assertEquals("B1", player.getPlayerGrade());
 
         List<PlayerGradeHistory> gradeHistory = playerGradeHistoryRepository.findAllByFanId(player.getFanId());
         assertEquals(1, gradeHistory.size());
-        assertEquals("B*", gradeHistory.get(0).getGrade());
+        assertEquals("B1", gradeHistory.get(0).getGrade());
 
         player = entityManager.find(Player.class, 22l);
-        assertEquals("A", player.getPlayerGrade());
+        assertEquals("A1", player.getPlayerGrade());
 
         gradeHistory = playerGradeHistoryRepository.findAllByFanId(player.getFanId());
         assertEquals(2, gradeHistory.size());
-        assertEquals("B*", gradeHistory.get(0).getGrade());
+        assertEquals("B1", gradeHistory.get(0).getGrade());
 
     }
 
@@ -80,8 +80,7 @@ public class GradeUploadTest extends AbstractIntegrationTest {
         player.setLastName("Kamran");
         player.setDateOfBirth(LocalDate.now());
         player.setGender(Gender.M);
-        player.setPlayerGrade("B*");
-        //TODO Create player is not saving the mapping.
+        player.setPlayerGrade("B1");
         player.getForeignMappings().add(new PlayerForeignMappingDTO(INTERNAL, "222"));
         return playerController.savePlayerDetails(player).getData();
     }

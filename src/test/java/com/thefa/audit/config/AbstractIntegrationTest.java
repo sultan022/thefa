@@ -3,12 +3,14 @@ package com.thefa.audit.config;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.thefa.audit.PlayerAuditApplication;
+import com.thefa.audit.rest.PmaPlayerRestService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -73,6 +75,9 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     private WebApplicationContext context;
+
+    @MockBean
+    protected PmaPlayerRestService pmaPlayerRestService;
 
     @Before
     public void setup() {

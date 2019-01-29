@@ -9,4 +9,5 @@ public class PlayerAuditApplication {
     public static void main(String[] args) {
         SpringApplication.run(PlayerAuditApplication.class, args);
     }
+
 }

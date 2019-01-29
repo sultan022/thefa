@@ -2,6 +2,8 @@ package com.thefa.audit.model.dto.player.base;
 
 import com.thefa.audit.model.dto.rerference.ClubDTO;
 import com.thefa.audit.model.shared.Gender;
+import com.thefa.audit.model.shared.InjuryStatus;
+import com.thefa.audit.model.shared.MaturationStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -46,6 +48,16 @@ public class PlayerDTO {
     private Set<PlayerPositionDTO> playerPositions = new HashSet<>();
 
     private Set<PlayerSocialDTO> playerSocials = new HashSet<>();
+
+    private MaturationStatus maturationStatus;
+
+    private LocalDate maturationDate;
+
+    private Integer vulnerabilityStatus;
+
+    private LocalDate vulnerabilityDate;
+
+    private InjuryStatus injuryStatus;
 
     private String createdBy;
 

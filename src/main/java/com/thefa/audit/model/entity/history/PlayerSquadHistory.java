@@ -26,4 +26,14 @@ public class PlayerSquadHistory extends AbstractHistory {
     @Enumerated(EnumType.STRING)
     private Assignment assignment;
 
+    public PlayerSquadHistory() {
+    }
+
+    public PlayerSquadHistory(Long fanId, SquadType squad, SquadStatusType status, Assignment assignment) {
+        super();
+        this.fanId = fanId;
+        this.squad = squad;
+        this.status = status;
+        this.assignment = assignment;
+    }
 }

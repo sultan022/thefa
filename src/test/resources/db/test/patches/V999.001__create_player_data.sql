@@ -1,6 +1,6 @@
 
 insert into fa_player(fan_id, first_name, middle_Name, last_Name, known_Name, date_of_birth, gender, player_grade, created_At, updated_At, version)
-values (1, 'Nayyer', '', 'Kamran', 'SNK',  curdate(), 'M', 'A*', sysdate(), sysdate(),  1);
+values (1, 'Nayyer', '', 'Kamran', 'SNK',  curdate(), 'M', 'A1', sysdate(), sysdate(),  1);
 
 insert into fa_player_squad (fan_id, squad, squad_status) values (1, 'U21', 'MONITOR');
 
@@ -20,7 +20,7 @@ INSERT INTO fa_player_foreign_mapping (fan_id, source, foreign_id) VALUES (1, 'I
 
 
 INSERT INTO fa_player(fan_id, first_name, middle_Name, last_Name, known_Name, date_of_birth, gender, player_grade, created_At, updated_At, version)
-values (2, 'waleed', '', 'khan', 'wk',  curdate(), 'M', 'A*', sysdate(), sysdate(),  1);
+values (2, 'waleed', '', 'khan', 'wk',  curdate(), 'M', 'A1', sysdate(), sysdate(),  1);
 
 INSERT INTO  fa_player_squad (fan_id, squad, squad_status) values (2, 'U21', 'MONITOR');
 
@@ -41,7 +41,7 @@ INSERT INTO fa_player_foreign_mapping (fan_id, source, foreign_id) VALUES (2, 'I
 
 
 INSERT INTO fa_player(fan_id, first_name, middle_Name, last_Name, known_Name, date_of_birth, gender, player_grade, created_At, updated_At, version)
-values (3, 'Taimour', '', 'Babar', 'NH',  curdate(), 'M', 'A*', sysdate(), sysdate(),  1);
+values (3, 'Taimour', '', 'Babar', 'NH',  curdate(), 'M', 'A1', sysdate(), sysdate(),  1);
 
 INSERT INTO  fa_player_squad (fan_id, squad, squad_status) values (3, 'U21', 'MONITOR');
 
@@ -58,6 +58,38 @@ INSERT INTO fa_player_position (fan_id, position_number, position_order) VALUES 
 
 INSERT INTO fa_player_foreign_mapping (fan_id, source, foreign_id) VALUES (3, 'INTERNAL', 'fapl0002');
 INSERT INTO fa_player_foreign_mapping (fan_id, source, foreign_id) VALUES (3, 'OPTA', 'opta1001');
+
+
+INSERT INTO fa_player(fan_id, first_name, middle_Name, last_Name, known_Name, date_of_birth, gender, player_grade, created_At, updated_At, version)
+values (4, 'Taimour', '', 'Babar', 'NH',  curdate(), 'M', 'A1', sysdate(), sysdate(),  1);
+
+INSERT INTO  fa_player_squad (fan_id, squad, squad_status) values (4, 'U21', 'MONITOR');
+
+INSERT INTO  fa_player_eligibility (fan_id, country_code) values (4, 'PAK');
+
+INSERT INTO fa_player_intel (fan_id, intel_type, note, archived, created_at) VALUES (4, 'GENERAL', 'He is an awesome player', false, sysdate());
+INSERT INTO fa_player_intel (fan_id, intel_type, note, archived, created_at) VALUES (4, 'EDUCATION', 'He done a PhD', true, sysdate());
+
+INSERT INTO fa_player_position (fan_id, position_number, position_order) VALUES (4, 1, 1);
+
+INSERT INTO fa_player_foreign_mapping (fan_id, source, foreign_id) VALUES (4, 'INTERNAL', 'fapl0005');
+
+INSERT INTO fa_player(fan_id, first_name, middle_Name, last_Name, known_Name, date_of_birth, gender, player_grade, created_At, updated_At, version)
+values (5, 'Taimour', '', 'Babar', 'NH',  curdate(), 'M', 'A1', sysdate(), sysdate(),  1);
+
+INSERT INTO  fa_player_squad (fan_id, squad, squad_status) values (5, 'U21', 'MONITOR');
+
+INSERT INTO  fa_player_eligibility (fan_id, country_code) values (5, 'PAK');
+
+INSERT INTO fa_player_intel (fan_id, intel_type, note, archived, created_at) VALUES (5, 'GENERAL', 'He is an awesome player', false, sysdate());
+INSERT INTO fa_player_intel (fan_id, intel_type, note, archived, created_at) VALUES (5, 'EDUCATION', 'He done a PhD', true, sysdate());
+
+INSERT INTO fa_player_position (fan_id, position_number, position_order) VALUES (5, 1, 1);
+
+INSERT INTO fa_player_foreign_mapping (fan_id, source, foreign_id) VALUES (5, 'INTERNAL', 'fapl0005');
+
+INSERT INTO fa_player_foreign_mapping (fan_id, source, foreign_id) VALUES (5, 'PMA_EXTERNAL', '1084313');
+
 
 
 

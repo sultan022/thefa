@@ -21,7 +21,7 @@ abstract class AbstractHistory {
     private Long historyId;
 
     @Column(name = "fan_id")
-    private Long fanId;
+    protected Long fanId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp

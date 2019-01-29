@@ -12,13 +12,14 @@ create table fa_player
   club_id varchar(50) null,
   maturation_status varchar(50),
   maturation_date datetime,
-  vulnerability_status varchar(50),
+  vulnerability_status int null,
   vulnerability_date datetime,
   created_at datetime default CURRENT_TIMESTAMP,
   updated_at datetime default CURRENT_TIMESTAMP,
   created_by varchar(255) null,
   updated_by varchar(255) null,
   version int,
+  injury_status varchar(50) null,
   FOREIGN KEY (gender) REFERENCES fa_gender(gender),
   FOREIGN KEY (player_grade) REFERENCES fa_grade(grade),
   FOREIGN KEY (club_id) REFERENCES fa_club(club_id)
@@ -103,4 +104,17 @@ create table fa_player_internal_mapping_counter
 );
 
 INSERT INTO fa_player_internal_mapping_counter (id, counter) VALUES (1, 11000);
+
+CREATE TABLE `fa_player_attachment` (
+  `attachment_id` int(11) NOT NULL AUTO_INCREMENT,
+  `fan_id` int(11) NOT NULL,
+  `attachment_path` varchar(255) DEFAULT NULL,
+  `attachment_type` varchar(10) DEFAULT NULL,
+  `camp_date` datetime DEFAULT NULL,
+  `uploaded_by` varchar(50) DEFAULT NULL,
+  `uploaded_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`attachment_id`),
+  KEY `fa_attachments_ibfk_1` (`fan_id`),
+  CONSTRAINT `fa_attachments_ibfk_1` FOREIGN KEY (`fan_id`) REFERENCES `fa_player` (`fan_Id`)
+);
 

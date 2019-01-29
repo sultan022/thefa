@@ -32,7 +32,7 @@ public class ReferenceControllerTest extends AbstractIntegrationTest {
         mvc.perform(get("/reference/grades")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(7)));
+                .andExpect(jsonPath("$", hasSize(9)));
 
     }
 
@@ -42,6 +42,6 @@ public class ReferenceControllerTest extends AbstractIntegrationTest {
         mvc.perform(get("/reference/clubs")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(199)));
+                .andExpect(jsonPath("$", hasSize(2279)));
     }
 }

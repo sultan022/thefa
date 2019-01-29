@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -104,6 +105,10 @@ public class ReferenceService {
         return StreamEx.of(clubRepository.findAll().iterator())
                 .map(entity -> modelMapper.map(entity, ClubDTO.class))
                 .toList();
+    }
+
+    public boolean doAllGradesExist(Set<String> grades) {
+        return grades.size() == gradeRepository.countAllByGradeIn(grades);
     }
 
 }

@@ -2,8 +2,8 @@ package com.thefa.audit.model.entity.player;
 
 import com.thefa.audit.model.entity.reference.Club;
 import com.thefa.audit.model.shared.Gender;
+import com.thefa.audit.model.shared.InjuryStatus;
 import com.thefa.audit.model.shared.MaturationStatus;
-import com.thefa.audit.model.shared.VulnerabilityStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -21,7 +21,8 @@ import java.util.*;
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "fa_player")
-@Data @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 public class Player {
 
@@ -74,8 +75,7 @@ public class Player {
     @JoinColumn(name = "fan_id")
     private Set<PlayerEligibility> eligibilities = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "fan_id")
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PlayerSquad> playerSquads = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -111,9 +111,8 @@ public class Player {
     @Column(name = "maturation_status")
     private MaturationStatus maturationStatus;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "vulnerability_status")
-    private VulnerabilityStatus vulnerabilityStatus;
+    private Integer vulnerabilityStatus;
 
     @Column(name = "maturation_date")
     @Temporal(TemporalType.DATE)
@@ -122,6 +121,10 @@ public class Player {
     @Column(name = "vulnerability_date")
     @Temporal(TemporalType.DATE)
     private Date vulnerabilityDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "injury_status")
+    private InjuryStatus injuryStatus;
 
     @Version
     @Column(name = "version")

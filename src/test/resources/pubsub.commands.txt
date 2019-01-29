@@ -1,2 +1,4 @@
 curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.fnd
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.inj
 curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.fnd.default -H "Content-Type: application/json" -d '{"topic": "projects/the-fa-api-dev/topics/com.thefa.audit.player.fnd", "ackDeadlineSeconds": 600}'
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.inj.default -H "Content-Type: application/json" -d '{"topic": "projects/the-fa-api-dev/topics/com.thefa.audit.player.inj", "ackDeadlineSeconds": 600}'

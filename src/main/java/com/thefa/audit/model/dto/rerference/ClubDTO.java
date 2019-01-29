@@ -24,6 +24,8 @@ public class ClubDTO {
 
     private String city;
 
+    private String country;
+
     private String stadium;
 
     private String website;

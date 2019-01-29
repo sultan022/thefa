@@ -1,10 +1,12 @@
 package com.thefa.audit.model.entity.player;
 
 
-import com.thefa.audit.model.shared.SquadType;
 import com.thefa.audit.model.shared.SquadStatusType;
+import com.thefa.audit.model.shared.SquadType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
@@ -13,15 +15,17 @@ import javax.persistence.*;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @IdClass(PlayerSquadId.class)
+@NoArgsConstructor
+@AllArgsConstructor
 public class PlayerSquad {
 
     @Id
-    @Column(name = "fan_id")
+    @Column(name = "fan_id", nullable = false)
     @EqualsAndHashCode.Include
     private Long fanId;
 
     @Id
-    @Column(name = "squad")
+    @Column(name = "squad", nullable = false)
     @Enumerated(EnumType.STRING)
     @EqualsAndHashCode.Include
     private SquadType squad;
@@ -29,5 +33,9 @@ public class PlayerSquad {
     @Enumerated(EnumType.STRING)
     @Column(name="squad_status")
     private SquadStatusType status;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "fan_id", insertable = false, updatable = false)
+    private Player player;
 
 }

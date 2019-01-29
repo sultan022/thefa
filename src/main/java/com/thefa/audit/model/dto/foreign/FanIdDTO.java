@@ -34,6 +34,8 @@ public class FanIdDTO {
 
     private Gender gender;
 
+    private String profileImage;
+
     private boolean existsPPS;
 
 }
