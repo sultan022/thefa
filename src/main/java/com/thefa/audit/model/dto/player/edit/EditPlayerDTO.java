@@ -14,7 +14,7 @@ public class EditPlayerDTO {
 
     @EqualsAndHashCode.Include
     @NotNull
-    private Long fanId;
+    private String playerId;
 
     @Valid
     private List<EditPlayerIntelDTO> playerIntels = new ArrayList<>();

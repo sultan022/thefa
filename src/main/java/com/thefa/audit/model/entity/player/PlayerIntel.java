@@ -24,8 +24,8 @@ public class PlayerIntel {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "fan_id")
-    private Long fanId;
+    @Column(name = "player_id")
+    private String playerId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "intel_type")

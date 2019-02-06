@@ -45,14 +45,14 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.data.content[0].fanId", is(1)))
+                .andExpect(jsonPath("$.data.content[0].playerId", is("1")))
                 .andExpect(jsonPath("$.data.content[0].firstName", is("Nayyer")));
     }
 
     @Test
     public void givenValidPlayer_whenCreatePlayer_thenSavePlayer() throws Exception {
 
-        String json = validPlayerJsonWithFanId(11000L);
+        String json = validPlayerJsonWithPlayerId("11000");
 
         ArgumentCaptor<FndRecordUpdateMsgDTO> fndMsgPublish = ArgumentCaptor.forClass(FndRecordUpdateMsgDTO.class);
 
@@ -68,14 +68,14 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
         verify(playerUpdatedPublisher).publish(fndMsgPublish.capture());
 
         PlayerDTO publishPlayerDTO = fndMsgPublish.getValue().getData();
-        assertEquals("Wrong fanId for published message", Long.valueOf(11000L), publishPlayerDTO.getFanId());
+        assertEquals("Wrong playerId for published message", "11000", publishPlayerDTO.getPlayerId());
 
     }
 
     @Test
     public void givenPlayerAndIntelExists_whenEditPlayerWithWrongIntels_thenThrowsException() throws Exception {
 
-        String json = validEditPlayerJsonWithFanId(1L, 999L);
+        String json = validEditPlayerJsonWithPlayerId("1", 999L);
 
         mvc.perform(put("/players")
                 .content(json)
@@ -86,7 +86,7 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     @Test
     public void givenPlayerAndIntelExists_whenEditPlayerIntels_thenPlayerIsEdited() throws Exception {
 
-        String json = validEditPlayerJsonWithFanId(1L, 1L);
+        String json = validEditPlayerJsonWithPlayerId("1", 1L);
 
         mvc.perform(put("/players")
                 .content(json)
@@ -109,9 +109,9 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-    private static String validPlayerJsonWithFanId(Long fanId) {
+    private static String validPlayerJsonWithPlayerId(String playerId) {
         return "{" +
-                "\"fanId\":" + fanId + "," +
+                "\"playerId\": \"" + playerId + "\",\n" +
                 "\"firstName\":\"Omer\"," +
                 "\"lastName\":\"Arshad\"," +
                 "\"dateOfBirth\":\"1970-01-01\"," +
@@ -119,9 +119,9 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 "}";
     }
 
-    private static String validEditPlayerJsonWithFanId(Long fanId, Long intelId) {
+    private static String validEditPlayerJsonWithPlayerId(String playerId, Long intelId) {
         return "{" +
-                "\"fanId\":" + fanId + "," +
+                "\"playerId\": \"" + playerId + "\",\n" +
                 "\"playerIntels\": [" +
                 "{" +
                 "\"id\":" + intelId + "," +
@@ -135,8 +135,8 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     @Test
     public void givenPlayers_firstNotExist_whenEditPlayers_thenThrowsException() throws Exception {
 
-        String validPlayerId = "fapl0001";
-        String invalidPlayerId = "opta1000";
+        String validPlayerId = "1";
+        String invalidPlayerId = "10";
         LocalDate murationDate = LocalDate.parse("2018-12-31");
         LocalDate vulnerabilityDate = LocalDate.parse("2018-12-31");
         String json = TestCaseUtil.editPlayersJsonWithPlayerIdsAndDates(validPlayerId, murationDate, vulnerabilityDate, invalidPlayerId);
@@ -150,8 +150,8 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     @Test
     public void givenPlayersAndExist_whenUploadStatuses_thenGetValidResponse() throws Exception {
 
-        String validPlayerId1 = "fapl0001";
-        String validPlayerId2 = "fapl0002";
+        String validPlayerId1 = "1";
+        String validPlayerId2 = "2";
         LocalDate murationDate = LocalDate.parse("2018-12-31");
         LocalDate vulnerabilityDate = LocalDate.parse("2018-12-31");
         String json = TestCaseUtil.editPlayersJsonWithPlayerIdsAndDates(validPlayerId1, murationDate, vulnerabilityDate, validPlayerId2);
@@ -163,9 +163,9 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     }
 
     @Test
-    public void givenPlayersWithInValidAndExist_whenEditPlayers_thenThrowsException() throws Exception {
+    public void givenPlayersWithInValidDataAndExist_whenEditPlayers_thenThrowsException() throws Exception {
 
-        String validPlayerId1 = "fapl0001";
+        String validPlayerId1 = "1";
         String json = TestCaseUtil.editPlayersJsonWithEmptyData(validPlayerId1);
 
         mvc.perform(put("/players/upload/statuses")
@@ -177,8 +177,8 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     @Test
     public void givenPlayersWithOnePlayerEmptyDateAndExist_whenEditPlayers_thenThrowsException() throws Exception {
 
-        String validPlayerId1 = "fapl0001";
-        String validPlayerId2 = "fapl0002";
+        String validPlayerId1 = "1";
+        String validPlayerId2 = "2";
 
         LocalDate murationDate = LocalDate.parse("2018-12-31");
         LocalDate vulnerabilityDate = LocalDate.parse("2018-12-31");
@@ -195,8 +195,8 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     @Test
     public void givenPlayersWithSpacificDataAndExist_whenEditPlayers_thenProccessSpacificData() throws Exception {
 
-        String validPlayerId1 = "fapl0001";
-        String validPlayerId2 = "fapl0002";
+        String validPlayerId1 = "1";
+        String validPlayerId2 = "2";
 
         LocalDate murationDate = LocalDate.parse("2018-12-31");
         LocalDate vulnerabilityDate = LocalDate.parse("2018-12-31");
@@ -212,8 +212,8 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     @Test
     public void givenPlayersWithOneEmptyDataAndExist_whenEditPlayers_thenProccessNonEmpty() throws Exception {
 
-        String validPlayerId1 = "fapl0001";
-        String validPlayerId2 = "fapl0002";
+        String validPlayerId1 = "1";
+        String validPlayerId2 = "2";
 
         LocalDate murationDate = LocalDate.parse("2018-12-31");
         LocalDate vulnerabilityDate = LocalDate.parse("2018-12-31");
@@ -230,13 +230,13 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
     public void givenPlayersWithSquads_whenBulkEditSingleSquads_thenSquadsAreUpdatedSuccessfully() throws Exception {
 
         String json = "{" +
-                "\"fanIds\":[3,4]," +
+                "\"playerIds\":[3,4]," +
                 "\"fromSquad\":\"U21\"," +
                 "\"toSquad\":\"SENIORS\"," +
                 "\"toStatus\":\"MONITOR\"" +
                 "}";
 
-        Optional<PlayerDTO> player = playerService.findPlayer(3L);
+        Optional<PlayerDTO> player = playerService.findPlayer("3");
         assertTrue("Player Should Exist", player.isPresent());
         assertTrue("Player Squad should be present",
                 StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());
@@ -248,7 +248,7 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-        Optional<PlayerDTO> playerAfter = playerService.findPlayer(3L);
+        Optional<PlayerDTO> playerAfter = playerService.findPlayer("3");
         assertTrue("Player Should Exist", playerAfter.isPresent());
         assertFalse("Player Squad should not be present",
                 StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());
@@ -263,7 +263,7 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
 
         String json = "[" +
                 "{" +
-                "\"fanId\": 5," +
+                "\"playerId\": 5," +
                 "\"squads\": [" +
                             "{" +
                                 "\"squad\":\"SENIORS\"," +
@@ -273,7 +273,7 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                     "}" +
                 "]";
 
-        Optional<PlayerDTO> player = playerService.findPlayer(5L);
+        Optional<PlayerDTO> player = playerService.findPlayer("5");
         assertTrue("Player Should Exist", player.isPresent());
         assertTrue("Player Squad should be present",
                 StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());
@@ -285,7 +285,7 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        Optional<PlayerDTO> playerAfter = playerService.findPlayer(5L);
+        Optional<PlayerDTO> playerAfter = playerService.findPlayer("5");
         assertTrue("Player Should Exist", playerAfter.isPresent());
         assertFalse("Player Squad should not be present",
                 StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());

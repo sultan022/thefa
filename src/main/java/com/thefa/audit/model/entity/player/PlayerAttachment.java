@@ -34,8 +34,8 @@ public class PlayerAttachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long attachmentId;
 
-    @Column(name = "fan_id")
-    private Long fanId;
+    @Column(name = "player_id")
+    private String playerId;
 
     @Column(name = "attachment_path")
     private String attachmentPath;

@@ -38,8 +38,8 @@ public class InjPlayerSubscriber extends AbstractSubscriber<InjRecordUpdateMsgDT
                 .thenApplyAsync(player -> player.getTeamIds().stream().findFirst().orElse(0))
                 .thenComposeAsync(teamId -> pmaPlayerInjRestService.getPlayerStatus(teamId, injRecordUpdateMsgDTO.getPmaExternalId()))
                 .thenApplyAsync(playerStatusGroup -> {
-                    playerService.updatePlayerInjuryGroup(injRecordUpdateMsgDTO.getId(), playerStatusGroup.toInjuryStatus());
-                    log.info("Player Injury Record Updated for Player fanId: " + injRecordUpdateMsgDTO.getId());
+                    playerService.updatePlayerInjuryGroup(injRecordUpdateMsgDTO.getPlayerId(), playerStatusGroup.toInjuryStatus());
+                    log.info("Player Injury Record Updated for Player playerId: " + injRecordUpdateMsgDTO.getPlayerId());
                     return "OK";
                 })
                 .join();

@@ -12,12 +12,12 @@ import java.util.List;
 @Repository
 public interface PlayerIntelRepository extends PagingAndSortingRepository<PlayerIntel, Long> {
 
-    Page<PlayerIntel> findByFanIdAndIntelTypeAndArchivedIsFalse(long fanId, IntelType intelType, Pageable pageable);
+    Page<PlayerIntel> findByPlayerIdAndIntelTypeAndArchivedIsFalse(String playerId, IntelType intelType, Pageable pageable);
 
-    Page<PlayerIntel> findByFanIdAndArchivedIsFalse(long fanId, Pageable pageable);
+    Page<PlayerIntel> findByPlayerIdAndArchivedIsFalse(String playerId, Pageable pageable);
 
-    long countByFanIdAndIdInAndArchivedIsFalse(long fanId, List<Long> ids);
+    long countByPlayerIdAndIdInAndArchivedIsFalse(String playerId, List<Long> ids);
 
-    List<PlayerIntel> findByFanId(long fanId);
+    List<PlayerIntel> findByPlayerId(String playerId);
 
 }

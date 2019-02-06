@@ -1,7 +1,8 @@
 package com.thefa.audit.controller;
 
-import com.thefa.audit.dao.service.PlayerForeignMappingService;
+import com.thefa.audit.dao.service.PlayerIntelService;
 import com.thefa.audit.dao.service.PlayerService;
+import com.thefa.audit.dao.service.PlayerSquadService;
 import com.thefa.audit.dao.service.ReferenceService;
 import com.thefa.audit.model.dto.player.base.PlayerAttachmentPathDTO;
 import com.thefa.audit.model.dto.player.base.PlayerDTO;
@@ -16,7 +17,6 @@ import com.thefa.audit.model.dto.player.load.PlayerGradeUploadDTO;
 import com.thefa.audit.model.dto.player.load.PlayerStatusUploadDTO;
 import com.thefa.audit.model.dto.pubsub.FndRecordUpdateMsgDTO;
 import com.thefa.audit.model.shared.AttachmentType;
-import com.thefa.audit.model.shared.DataSourceType;
 import com.thefa.audit.model.shared.IntelType;
 import com.thefa.audit.pubsub.publisher.FndPlayerUpdatedPublisher;
 import com.thefa.common.cache.CacheService;
@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -59,9 +58,11 @@ import static org.springframework.http.MediaType.*;
 public class PlayerController {
 
     private final PlayerService playerService;
+    private final PlayerIntelService playerIntelService;
+    private final PlayerSquadService playerSquadService;
+
     private final CloudStorageService cloudStorageService;
     private final ReferenceService referenceService;
-    private final PlayerForeignMappingService playerForeignMappingService;
     private final CacheService cacheService;
     private final FndPlayerUpdatedPublisher playerUpdatedPublisher;
     private final ServletContext servletContext;
@@ -72,25 +73,27 @@ public class PlayerController {
     public PlayerController(@Value("the-fa-api-dev") String bucket,
                             CacheService cacheService,
                             PlayerService playerService,
+                            PlayerIntelService playerIntelService,
+                            PlayerSquadService playerSquadService,
                             CloudStorageService cloudStorageService,
-                            PlayerForeignMappingService playerForeignMappingService,
                             FndPlayerUpdatedPublisher playerUpdatedPublisher,
                             ReferenceService referenceService,
                             ServletContext servletContext) {
         this.playerService = playerService;
+        this.playerIntelService = playerIntelService;
+        this.playerSquadService = playerSquadService;
         this.referenceService = referenceService;
         this.cloudStorageService = cloudStorageService;
         this.cdnBucket = bucket;
-        this.playerForeignMappingService = playerForeignMappingService;
         this.cacheService = cacheService;
         this.playerUpdatedPublisher = playerUpdatedPublisher;
         this.servletContext = servletContext;
     }
 
     @ApiOperation(value = "Upload an image for a player")
-    @PostMapping(value = "/{fanId}/uploadImage", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/{playerId}/uploadImage", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
     public DeferredResult<ApiResponse<String>> uploadFile(
-            @PathVariable() long fanId,
+            @PathVariable() String playerId,
             @RequestParam("file") MultipartFile file
     ) {
 
@@ -103,9 +106,9 @@ public class PlayerController {
                         throw new BadRequestException("Invalid file type");
                     }
 
-                    validatePlayerExists(fanId);
+                    validatePlayerExists(playerId);
 
-                    return "images/" + fanId + "/" + file.getOriginalFilename();
+                    return "images/" + playerId + "/" + file.getOriginalFilename();
 
                 }).thenComposeAsync(filePath -> {
                     try {
@@ -113,15 +116,15 @@ public class PlayerController {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                }).thenApplyAsync(uri -> playerService.updatePlayerProfileImage(fanId, uri))
+                }).thenApplyAsync(uri -> playerService.updatePlayerProfileImage(playerId, uri))
                         .thenApplyAsync(uriOption -> uriOption.map(ApiResponse::success).<RecordNotFoundException>orElseThrow(RecordNotFoundException::new))
         );
     }
 
     @ApiOperation(value = "Upload an attachment for a player")
-    @PostMapping(value = "/{fanId}/attachments", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/{playerId}/attachments", consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
     public DeferredResult<ApiResponse<String>> uploadPlayerAttachment(
-            @PathVariable() long fanId,
+            @PathVariable() String playerId,
             @RequestParam(value = "campDate", required = false) LocalDate campDate,
             @RequestParam("type") AttachmentType type,
             @RequestParam("file") MultipartFile file
@@ -135,9 +138,9 @@ public class PlayerController {
                         throw new BadRequestException("Invalid file type");
                     }
 
-                    validatePlayerExists(fanId);
+                    validatePlayerExists(playerId);
 
-                    return type.name().toLowerCase() + "/" + fanId + "/" + file.getOriginalFilename();
+                    return type.name().toLowerCase() + "/" + playerId + "/" + file.getOriginalFilename();
 
                 }).thenComposeAsync(filePath -> {
                     try {
@@ -146,20 +149,20 @@ public class PlayerController {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                }).thenApplyAsync(uri -> playerService.addPlayerAttachment(fanId, type, uri, campDate))
-                        .thenApplyAsync(id -> servletContext.getContextPath() + "/players/" + fanId + "/attachments/" + id)
+                }).thenApplyAsync(uri -> playerService.addPlayerAttachment(playerId, type, uri, campDate))
+                        .thenApplyAsync(id -> servletContext.getContextPath() + "/players/" + playerId + "/attachments/" + id)
                                 .thenApplyAsync(ApiResponse::success)
         );
     }
 
     @ApiOperation(value = "Retrieve an attachment for a player")
-    @GetMapping(value = "/{fanId}/attachments/{attachmentId}", produces = APPLICATION_PDF_VALUE)
+    @GetMapping(value = "/{playerId}/attachments/{attachmentId}", produces = APPLICATION_PDF_VALUE)
     public DeferredResult<byte[]> retrieveAttachment(
-            @PathVariable() long fanId,
+            @PathVariable() String playerId,
             @PathVariable() long attachmentId
     ) {
         return DeferredResults.from(
-                playerService.findPlayerAttachment(fanId, attachmentId)
+                playerService.findPlayerAttachment(playerId, attachmentId)
                     .map(attachment -> cloudStorageService.retrieveFileAsync(cdnBucket, attachment.getAttachmentPath())
                             .thenApplyAsync(Pair::getSecond))
                     .orElse(CompletableFuture.supplyAsync(() -> {
@@ -168,13 +171,13 @@ public class PlayerController {
         );
     }
 
-    @GetMapping(value = "/{fanId}/attachments")
-    public ApiResponse<List<PlayerAttachmentPathDTO>> playerAttachments(@PathVariable() long fanId) {
-        validatePlayerExists(fanId);
+    @GetMapping(value = "/{playerId}/attachments")
+    public ApiResponse<List<PlayerAttachmentPathDTO>> playerAttachments(@PathVariable() String playerId) {
+        validatePlayerExists(playerId);
         return ApiResponse.success(
-                StreamEx.of(playerService.findPlayerAttachments(fanId))
+                StreamEx.of(playerService.findPlayerAttachments(playerId))
                     .map(a -> new PlayerAttachmentPathDTO(
-                            servletContext.getContextPath() + "/players/" + fanId + "/attachments/" + a.getAttachmentId(),
+                            servletContext.getContextPath() + "/players/" + playerId + "/attachments/" + a.getAttachmentId(),
                             a.getAttachmentType(),
                             a.getCampDate(),
                             a.getUploadedBy(),
@@ -195,34 +198,34 @@ public class PlayerController {
     }
 
     @ApiOperation(value = "Get a Player")
-    @GetMapping(value = "/{fanId}")
-    public ApiResponse<PlayerDTO> getPlayerDetails(@PathVariable() long fanId) {
-        return playerService.findPlayer(fanId)
+    @GetMapping(value = "/{playerId}")
+    public ApiResponse<PlayerDTO> getPlayerDetails(@PathVariable() String playerId) {
+        return playerService.findPlayer(playerId)
                 .map(ApiResponse::success)
                 .<RecordNotFoundException>orElseThrow(RecordNotFoundException::new);
     }
 
     @ApiOperation(value = "Find Player's Intel Notes By Type")
-    @GetMapping(value = "/{fanId}/intels")
+    @GetMapping(value = "/{playerId}/intels")
     public ApiResponse<PageResponse<PlayerIntelDTO>> findIntelByType(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
-            @PathVariable() long fanId,
+            @PathVariable() String playerId,
             @RequestParam(value = "intelType", required = false) IntelType intelType
     ) {
-        validatePlayerExists(fanId);
-        return ApiResponse.success(playerService.findPlayerIntels(page, size, fanId, intelType));
+        validatePlayerExists(playerId);
+        return ApiResponse.success(playerIntelService.findPlayerIntels(page, size, playerId, intelType));
     }
 
     @ApiOperation(value = "Find Player's Squad History")
-    @GetMapping(value = "/{fanId}/squadHistory")
+    @GetMapping(value = "/{playerId}/squadHistory")
     public ApiResponse<PageResponse<PlayerSquadHistoryDTO>> findPlayerSquadHistory(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
-            @PathVariable() long fanId
+            @PathVariable() String playerId
     ) {
-        validatePlayerExists(fanId);
-        return ApiResponse.success(playerService.findPlayerSquadHistory(page, size, fanId));
+        validatePlayerExists(playerId);
+        return ApiResponse.success(playerSquadService.findPlayerSquadHistory(page, size, playerId));
     }
 
     @ApiOperation(value = "Create a new Player")
@@ -233,11 +236,11 @@ public class PlayerController {
 
         playerService.createPlayer(playerDTO);
 
-        return playerService.findPlayer(playerDTO.getFanId()).map(player -> {
+        return playerService.findPlayer(playerDTO.getPlayerId()).map(player -> {
 
-            FndRecordUpdateMsgDTO updateMsgDTO = new FndRecordUpdateMsgDTO(player.getFanId(), player, player.getCreatedAt());
+            FndRecordUpdateMsgDTO updateMsgDTO = new FndRecordUpdateMsgDTO(player.getPlayerId(), player, player.getCreatedAt());
 
-            cacheService.setValue(FND_PREFIX + player.getFanId(), player.getCreatedAt(), 1, TimeUnit.DAYS);
+            cacheService.setValue(FND_PREFIX + player.getPlayerId(), player.getCreatedAt(), 1, TimeUnit.DAYS);
 
             playerUpdatedPublisher.publish(updateMsgDTO);
 
@@ -257,13 +260,13 @@ public class PlayerController {
                 .map(EditPlayerIntelDTO::getId)
                 .toList();
 
-        if (!playerService.doAllIntelsExistAndBelongToFanId(existingIntels, editPlayerDTO.getFanId())) {
+        if (!playerIntelService.doAllIntelsExistAndBelongToPlayerId(existingIntels, editPlayerDTO.getPlayerId())) {
             throw new BadRequestException("Invalid Intels");
         }
 
         playerService.editPlayer(editPlayerDTO);
 
-        return playerService.findPlayer(editPlayerDTO.getFanId())
+        return playerService.findPlayer(editPlayerDTO.getPlayerId())
                 .map(ApiResponse::success)
                 .orElse(ApiResponse.success(null));
 
@@ -273,21 +276,21 @@ public class PlayerController {
     @PutMapping(value = "/squads/single")
     public ApiResponse<Long> updatePlayerSingleSquads(@Valid @RequestBody BulkEditPlayerSingleSquadDTO bulkEditPlayerSquadsDTO) {
 
-        if (!playerService.playersExistWithSquadStatus(bulkEditPlayerSquadsDTO.getFanIds(), bulkEditPlayerSquadsDTO.getFromSquad())) {
-            throw new BadRequestException("Incorrect FanIds or Squads");
+        if (!playerService.playersExistWithSquadStatus(bulkEditPlayerSquadsDTO.getPlayerIds(), bulkEditPlayerSquadsDTO.getFromSquad())) {
+            throw new BadRequestException("Incorrect PlayerIds or Squads");
         }
 
         playerService.bulkUpdatePlayersSquads(bulkEditPlayerSquadsDTO);
 
-        return ApiResponse.success((long) bulkEditPlayerSquadsDTO.getFanIds().size());
+        return ApiResponse.success((long) bulkEditPlayerSquadsDTO.getPlayerIds().size());
     }
 
     @ApiOperation(value = "Bulk Update Players Multiple Squads with Squad Statuses")
     @PutMapping(value = "/squads/multiple")
     public ApiResponse<Long> updatePlayerMultipleSquads(@Valid @RequestBody Set<BulkEditPlayerMultipleSquadDTO> bulkEditPlayerMultipleSquadDTOs) {
 
-        if (!playerService.playersExist(StreamEx.of(bulkEditPlayerMultipleSquadDTOs).map(BulkEditPlayerMultipleSquadDTO::getFanId).toSet())) {
-            throw new BadRequestException("Invalid FanIds");
+        if (!playerService.playersExist(StreamEx.of(bulkEditPlayerMultipleSquadDTOs).map(BulkEditPlayerMultipleSquadDTO::getPlayerId).toSet())) {
+            throw new BadRequestException("Invalid PlayerIds");
         }
 
         playerService.bulkUpdatePlayerSquads(bulkEditPlayerMultipleSquadDTOs);
@@ -304,12 +307,14 @@ public class PlayerController {
             throw new BadRequestException("There are grades which do not exist in system");
         }
 
-        Map<String, Long> mapping = playerForeignMappingService.findPlayersFanId(DataSourceType.INTERNAL, StreamEx.of(playersGradePayload).map(PlayerGradeUploadDTO::getPlayerId).toSet());
-        if (mapping.size() != playersGradePayload.size()) {
+        Set<String>  playerIds = StreamEx.of(playersGradePayload)
+                .map(PlayerGradeUploadDTO::getPlayerId).toSet();
+
+        if (!playerService.playersExist(playerIds)) {
             throw new BadRequestException("There are playerIds which does not exists in system.");
         }
 
-        playerService.updatePlayersGrade(mapping, playersGradePayload);
+        playerService.updatePlayersGrade(playersGradePayload);
         return ApiResponse.success((long) playersGradePayload.size());
     }
 
@@ -329,21 +334,22 @@ public class PlayerController {
                     throw new BadRequestException("One or more record are invalid");
                 });
 
-        Map<String, Long> mapping = playerForeignMappingService.findPlayersFanId(DataSourceType.INTERNAL, StreamEx.of(nonEmptySet)
-                .map(PlayerStatusUploadDTO::getPlayerId).toSet());
+        Set<String>  playerIds = StreamEx.of(nonEmptySet)
+                .map(PlayerStatusUploadDTO::getPlayerId).toSet();
 
-        if (mapping.size() != nonEmptySet.size()) {
+
+        if (!playerService.playersExist(playerIds)) {
             throw new BadRequestException("There are playerIds which do not exist in system");
         }
 
-        playerService.editPlayers(mapping, nonEmptySet);
+        playerService.editPlayers(nonEmptySet);
 
         return ApiResponse.success((long) nonEmptySet.size());
 
     }
 
-    private void validatePlayerExists(long fanId) {
-        if (!playerService.playerExists(fanId)) {
+    private void validatePlayerExists(String playerId) {
+        if (!playerService.playerExists(playerId)) {
             throw new RecordNotFoundException();
         }
     }

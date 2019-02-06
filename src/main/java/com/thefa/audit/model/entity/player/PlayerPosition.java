@@ -14,9 +14,9 @@ import javax.persistence.*;
 public class PlayerPosition {
 
     @Id
-    @Column(name = "fan_id")
+    @Column(name = "player_id")
     @EqualsAndHashCode.Include
-    private Long fanId;
+    private String playerId;
 
     @Id
     @Column(name = "position_number")

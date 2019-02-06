@@ -14,7 +14,7 @@ public class PlayerAttachmentDTO {
     @EqualsAndHashCode.Include
     private Long attachmentId;
 
-    private Long fanId;
+    private String playerId;
 
     private String attachmentPath;
 

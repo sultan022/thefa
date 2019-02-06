@@ -34,13 +34,13 @@ public class InjPlayerSubscriberTest extends AbstractIntegrationTest {
     @Test
     public void givenCorrectPlayerExternalId_playerInjuryStatusIsUpdated() {
 
-        Optional<PlayerDTO> player = playerService.findPlayer(5L);
+        Optional<PlayerDTO> player = playerService.findPlayer("5");
         final AckReplyConsumer ack = mock(AckReplyConsumer.class);
 
         assertTrue("Player Should Exist", player.isPresent());
         assertNull("Player Injury Status Should not be present", player.get().getInjuryStatus());
 
-        InjRecordUpdateMsgDTO injRecordUpdateMsgDTO = new InjRecordUpdateMsgDTO(5L, "1084313");
+        InjRecordUpdateMsgDTO injRecordUpdateMsgDTO = new InjRecordUpdateMsgDTO("5", "1084313");
 
         PmaPlayerInjuryTeamDTO pmaPlayerInjuryTeamDTO = new PmaPlayerInjuryTeamDTO(Arrays.asList(1011386));
         PmaPlayerInjuryStatusGroupDTO pmaPlayerInjuryStatusGroupDTO = new PmaPlayerInjuryStatusGroupDTO("Fit");
@@ -50,7 +50,7 @@ public class InjPlayerSubscriberTest extends AbstractIntegrationTest {
 
         injPlayerSubscriber.onReceiveMessage(injRecordUpdateMsgDTO, ack);
 
-        player = playerService.findPlayer(5L);
+        player = playerService.findPlayer("5");
         assertTrue("Player Should Exist", player.isPresent());
         assertEquals("Player Injury Status Should be Updated", InjuryStatus.GREEN, player.get().getInjuryStatus());
         verify(ack, times(1)).ack();

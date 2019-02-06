@@ -20,8 +20,8 @@ abstract class AbstractHistory {
     @EqualsAndHashCode.Include
     private Long historyId;
 
-    @Column(name = "fan_id")
-    protected Long fanId;
+    @Column(name = "player_id")
+    protected String playerId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp

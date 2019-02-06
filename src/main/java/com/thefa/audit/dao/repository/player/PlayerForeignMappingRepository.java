@@ -13,6 +13,7 @@ import java.util.Set;
 @Repository
 public interface PlayerForeignMappingRepository extends PagingAndSortingRepository<PlayerForeignMapping, PlayerForeignId> {
 
-    @Query("SELECT p FROM PlayerForeignMapping p WHERE p.source = :source AND p.foreignPlayerId IN :playerIds")
-    Set<PlayerForeignMapping> findPlayersMapping(@Param("source") DataSourceType source, @Param("playerIds") Set<String> playerIds);
+    @Query("FROM PlayerForeignMapping WHERE source = :source AND foreignPlayerId IS NOT NULL")
+    Set<PlayerForeignMapping> findPlayers(@Param("source") DataSourceType source);
+
 }

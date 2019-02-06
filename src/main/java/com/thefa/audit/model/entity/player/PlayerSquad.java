@@ -20,9 +20,9 @@ import javax.persistence.*;
 public class PlayerSquad {
 
     @Id
-    @Column(name = "fan_id", nullable = false)
+    @Column(name = "player_id", nullable = false)
     @EqualsAndHashCode.Include
-    private Long fanId;
+    private String playerId;
 
     @Id
     @Column(name = "squad", nullable = false)
@@ -35,7 +35,7 @@ public class PlayerSquad {
     private SquadStatusType status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "fan_id", insertable = false, updatable = false)
+    @JoinColumn(name = "player_id", insertable = false, updatable = false)
     private Player player;
 
 }

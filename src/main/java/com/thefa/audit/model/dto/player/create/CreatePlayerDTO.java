@@ -22,7 +22,7 @@ public class CreatePlayerDTO {
 
     @EqualsAndHashCode.Include
     @NotNull
-    private Long fanId;
+    private String playerId;
 
     @NotEmpty @Length(min = 3, max = 255)
     private String firstName;

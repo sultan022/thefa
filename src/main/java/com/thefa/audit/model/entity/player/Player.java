@@ -27,10 +27,10 @@ import java.util.*;
 public class Player {
 
     @Id
-    @Column(name = "fan_id")
+    @Column(name = "player_id")
     @EqualsAndHashCode.Include
     @ToString.Include
-    private Long fanId;
+    private String playerId;
 
     @Column(name = "first_name")
     @ToString.Include
@@ -68,27 +68,27 @@ public class Player {
     private Club club;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "fan_id")
+    @JoinColumn(name = "player_id")
     private Set<PlayerForeignMapping> foreignMappings = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "fan_id")
+    @JoinColumn(name = "player_id")
     private Set<PlayerEligibility> eligibilities = new HashSet<>();
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PlayerSquad> playerSquads = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "fan_id")
+    @JoinColumn(name = "player_id")
     @Where(clause = "archived = false")
     private List<PlayerIntel> playerIntels = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "fan_id")
+    @JoinColumn(name = "player_id")
     private Set<PlayerPosition> playerPositions = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "fan_id")
+    @JoinColumn(name = "player_id")
     private List<PlayerSocial> playerSocials = new ArrayList<>();
 
     @Column(name = "created_by")

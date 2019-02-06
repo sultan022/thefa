@@ -17,7 +17,7 @@ import java.util.Set;
 public class PlayerDTO {
 
     @EqualsAndHashCode.Include
-    private Long fanId;
+    private String playerId;
 
     private String firstName;
 

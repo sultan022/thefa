@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface PlayerGradeHistoryRepository extends PagingAndSortingRepository<PlayerGradeHistory, Long> {
 
-    @Query("SELECT h FROM PlayerGradeHistory h WHERE h.fanId = :fanId ORDER BY h.createdAt")
-    List<PlayerGradeHistory> findAllByFanId(@Param("fanId") Long fanId);
+    @Query("SELECT h FROM PlayerGradeHistory h WHERE h.playerId = :playerId ORDER BY h.createdAt")
+    List<PlayerGradeHistory> findAllByPlayerId(@Param("playerId") String playerId);
 }

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public class PlayerShortDTO {
 
     @EqualsAndHashCode.Include
-    private Long fanId;
+    private String playerId;
 
     private String firstName;
 

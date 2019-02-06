@@ -12,7 +12,7 @@ import java.util.Set;
 public class BulkEditPlayerSingleSquadDTO {
 
     @NotEmpty
-    private Set<Long> fanIds;
+    private Set<String> playerIds;
 
     @NotNull
     private SquadType fromSquad;

@@ -48,7 +48,7 @@ public class FndPlayerSubscriber extends AbstractSubscriber<FndRecordUpdateMsgDT
 
         PlayerDTO playerDTO = message.getData();
 
-        cacheService.getValue(FND_PREFIX + playerDTO.getFanId(), ZonedDateTime.class)
+        cacheService.getValue(FND_PREFIX + playerDTO.getPlayerId(), ZonedDateTime.class)
                 .filter(cacheDate -> cacheDate.toInstant().equals(message.getUpdatedDate().toInstant()))
                 .ifPresent(cacheDate -> {
                     if (appHelper.isRunningInProd) {

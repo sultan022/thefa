@@ -8,7 +8,7 @@ import java.io.Serializable;
 @Data
 public class PlayerForeignId implements Serializable {
 
-    private Long fanId;
+    private String playerId;
 
     private DataSourceType source;
 }

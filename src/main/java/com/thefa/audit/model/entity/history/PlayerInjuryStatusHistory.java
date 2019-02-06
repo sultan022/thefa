@@ -20,8 +20,8 @@ public class PlayerInjuryStatusHistory extends AbstractHistory {
     @Column(name = "injury_status")
     private InjuryStatus injuryStatus;
 
-    public PlayerInjuryStatusHistory(Long fanId, InjuryStatus injuryStatus) {
-        this.fanId = fanId;
+    public PlayerInjuryStatusHistory(String playerId, InjuryStatus injuryStatus) {
+        this.playerId = playerId;
         this.injuryStatus = injuryStatus;
     }
 }

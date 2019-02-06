@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 public class FndRecordUpdateMsgDTO {
 
-    private Long id;
+    private String playerId;
     private PlayerDTO data;
     private ZonedDateTime updatedDate;
 

@@ -29,9 +29,9 @@ public class PlayerSquadHistory extends AbstractHistory {
     public PlayerSquadHistory() {
     }
 
-    public PlayerSquadHistory(Long fanId, SquadType squad, SquadStatusType status, Assignment assignment) {
+    public PlayerSquadHistory(String playerId, SquadType squad, SquadStatusType status, Assignment assignment) {
         super();
-        this.fanId = fanId;
+        this.playerId = playerId;
         this.squad = squad;
         this.status = status;
         this.assignment = assignment;

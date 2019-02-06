@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
 @EqualsAndHashCode
 public class PlayerSquadHistoryDTO {
 
-    private Long fanId;
+    private String playerId;
 
     private SquadType squad;
 

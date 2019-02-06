@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InjRecordUpdateMsgDTO {
 
-    private Long id;
+    private String playerId;
     private String pmaExternalId;
 
 }

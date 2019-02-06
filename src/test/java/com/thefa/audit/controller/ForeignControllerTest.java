@@ -115,22 +115,4 @@ public class ForeignControllerTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$[0].existsPPS", is(false)));
     }
 
-    @Test
-    public void givenPlayerExists_whenSearchForFanId_thenReturnExistsFlagSet() throws Exception {
-
-        FanServicePlayerDTO servicePlayerDTO = new FanServicePlayerDTO();
-        servicePlayerDTO.setFanId(1L);
-
-        when(fanIdService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(servicePlayerDTO)));
-
-        MvcResult mvcResult = mvc.perform(post("/foreign/fanIdSearch")
-                .contentType(MediaType.APPLICATION_JSON).content(gson.toJson(VALID_LOOKUP_REQUEST)))
-                .andReturn();
-
-        mvc.perform(asyncDispatch(mvcResult))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].existsPPS", is(true)));
-    }
-
 }

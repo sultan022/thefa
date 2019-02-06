@@ -7,7 +7,7 @@ import java.io.Serializable;
 @Data
 public class PlayerPositionId implements Serializable {
 
-    private Long fanId;
+    private String playerId;
 
     private Integer positionNumber;
 

@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 @Repository
 public interface PlayerAttachmentRepository extends JpaRepository<PlayerAttachment, Long> {
 
-    Optional<PlayerAttachment> findByFanIdAndAttachmentId(Long fanId, Long attachmentId);
+    Optional<PlayerAttachment> findByPlayerIdAndAttachmentId(String playerId, Long attachmentId);
 
-    Stream<PlayerAttachment> findAllByFanIdOrderByUploadedAtDesc(Long fanId);
+    Stream<PlayerAttachment> findAllByPlayerIdOrderByUploadedAtDesc(String playerId);
 }

@@ -9,6 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PlayerSquadHistoryRepository extends PagingAndSortingRepository<PlayerSquadHistory, Long> {
 
-    Page<PlayerSquadHistory> findByFanId(long fanId, Pageable pageable);
+    Page<PlayerSquadHistory> findByPlayerId(String playerId, Pageable pageable);
 
 }

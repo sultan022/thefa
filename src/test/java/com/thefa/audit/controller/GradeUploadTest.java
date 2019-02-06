@@ -2,22 +2,18 @@ package com.thefa.audit.controller;
 
 import com.thefa.audit.config.AbstractIntegrationTest;
 import com.thefa.audit.dao.repository.player.PlayerGradeHistoryRepository;
-import com.thefa.audit.dao.service.PlayerForeignMappingService;
 import com.thefa.audit.model.dto.player.base.PlayerDTO;
 import com.thefa.audit.model.dto.player.base.PlayerForeignMappingDTO;
 import com.thefa.audit.model.dto.player.create.CreatePlayerDTO;
 import com.thefa.audit.model.dto.player.load.PlayerGradeUploadDTO;
 import com.thefa.audit.model.entity.history.PlayerGradeHistory;
 import com.thefa.audit.model.entity.player.Player;
-import com.thefa.audit.model.shared.DataSourceType;
 import com.thefa.audit.model.shared.Gender;
 import com.thefa.common.dto.shared.ApiResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -28,41 +24,38 @@ import java.util.Set;
 
 import static com.thefa.audit.model.shared.DataSourceType.INTERNAL;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.verify;
 
 @Transactional
 public class GradeUploadTest extends AbstractIntegrationTest {
 
-    @Autowired private PlayerController playerController;
-    @Autowired private EntityManager entityManager;
-    @Autowired private PlayerGradeHistoryRepository playerGradeHistoryRepository;
-
-    @SpyBean
-    private PlayerForeignMappingService playerForeignMappingService;
+    @Autowired
+    private PlayerController playerController;
+    @Autowired
+    private EntityManager entityManager;
+    @Autowired
+    private PlayerGradeHistoryRepository playerGradeHistoryRepository;
 
     @Test
     public void loadPlayerGradeTest() {
         Set<PlayerGradeUploadDTO> gradePayload = new HashSet<>();
-        gradePayload.add(new PlayerGradeUploadDTO("11", "B1"));
-        gradePayload.add(new PlayerGradeUploadDTO("222", "A1"));
+        gradePayload.add(new PlayerGradeUploadDTO("1", "B1"));
+        gradePayload.add(new PlayerGradeUploadDTO("22", "A1"));
 
         ApiResponse<Long> response = playerController.loadPlayersGrade(gradePayload);
 
-        verify(playerForeignMappingService).findPlayersFanId(Mockito.any(DataSourceType.class), Mockito.anySet());
-
         assertEquals(Long.valueOf(2), response.getData());
 
-        Player player = entityManager.find(Player.class, 1l);
+        Player player = entityManager.find(Player.class, "1");
         assertEquals("B1", player.getPlayerGrade());
 
-        List<PlayerGradeHistory> gradeHistory = playerGradeHistoryRepository.findAllByFanId(player.getFanId());
+        List<PlayerGradeHistory> gradeHistory = playerGradeHistoryRepository.findAllByPlayerId(player.getPlayerId());
         assertEquals(1, gradeHistory.size());
         assertEquals("B1", gradeHistory.get(0).getGrade());
 
-        player = entityManager.find(Player.class, 22l);
+        player = entityManager.find(Player.class, "22");
         assertEquals("A1", player.getPlayerGrade());
 
-        gradeHistory = playerGradeHistoryRepository.findAllByFanId(player.getFanId());
+        gradeHistory = playerGradeHistoryRepository.findAllByPlayerId(player.getPlayerId());
         assertEquals(2, gradeHistory.size());
         assertEquals("B1", gradeHistory.get(0).getGrade());
 
@@ -75,7 +68,7 @@ public class GradeUploadTest extends AbstractIntegrationTest {
 
     private PlayerDTO createPlayer() {
         CreatePlayerDTO player = new CreatePlayerDTO();
-        player.setFanId(22l);
+        player.setPlayerId("22");
         player.setFirstName("Nayyer");
         player.setLastName("Kamran");
         player.setDateOfBirth(LocalDate.now());
@@ -88,6 +81,6 @@ public class GradeUploadTest extends AbstractIntegrationTest {
     @After
     public void cleanup() {
         entityManager.createNativeQuery("Delete from fa_player_foreign_mapping where foreign_id = '222'");
-        entityManager.createNativeQuery("Delete from fa_player where fan_id = 22");
+        entityManager.createNativeQuery("Delete from fa_player where player_id = 22");
     }
 }

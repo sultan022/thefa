@@ -13,7 +13,7 @@ public class BulkEditPlayerMultipleSquadDTO {
 
     @NotNull
     @EqualsAndHashCode.Include
-    private Long fanId;
+    private String playerId;
 
     @Valid
     private Set<EditPlayerSquadDTO> squads;

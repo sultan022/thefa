@@ -5,11 +5,9 @@ import com.thefa.audit.dao.bigquery.opta.OptaPlayersBQService;
 import com.thefa.audit.dao.bigquery.pma.PmaExternalPlayersBQService;
 import com.thefa.audit.dao.bigquery.pma.PmaPlayersBQService;
 import com.thefa.audit.dao.bigquery.scout7.Scout7PlayersBQService;
-import com.thefa.audit.dao.service.PlayerService;
 import com.thefa.audit.model.dto.foreign.FanIdDTO;
 import com.thefa.audit.model.dto.foreign.ForeignPlayerDTO;
 import com.thefa.audit.model.dto.foreign.ForeignPlayerLookupDTO;
-import com.thefa.audit.model.dto.player.small.PlayerShortDTO;
 import com.thefa.audit.rest.FanIdService;
 import com.thefa.common.exception.BadRequestException;
 import com.thefa.common.helper.DeferredResults;
@@ -40,7 +38,6 @@ public class ForeignController {
     private final FoundationPlayersBQService foundationPlayersBQService;
     private final PmaExternalPlayersBQService pmaExternalPlayersBQService;
 
-    private final PlayerService playerService;
     private final FanIdService fanIdService;
     private final ModelMapper modelMapper;
 
@@ -50,7 +47,6 @@ public class ForeignController {
                              PmaPlayersBQService pmaPlayersBQService,
                              FoundationPlayersBQService foundationPlayersBQService,
                              PmaExternalPlayersBQService pmaExternalPlayersBQService,
-                             PlayerService playerService,
                              FanIdService fanIdService,
                              ModelMapper modelMapper) {
         this.optaPlayersBQService = optaPlayersBQService;
@@ -59,7 +55,6 @@ public class ForeignController {
         this.foundationPlayersBQService = foundationPlayersBQService;
         this.pmaExternalPlayersBQService = pmaExternalPlayersBQService;
 
-        this.playerService = playerService;
         this.fanIdService = fanIdService;
         this.modelMapper = modelMapper;
     }
@@ -74,25 +69,7 @@ public class ForeignController {
         }
 
         return DeferredResults.from(fanIdService.findPlayers(foreignPlayerLookupDTO)
-                .thenApplyAsync(fanServicePlayerDTOS -> {
-
-                    List<FanIdDTO> players = StreamEx.of(fanServicePlayerDTOS).map(fans -> modelMapper.map(fans, FanIdDTO.class)).toList();
-
-                    List<Long> fanIds = StreamEx.of(players).map(FanIdDTO::getFanId).toList();
-
-                    List<PlayerShortDTO> existingPlayers = playerService.searchPlayersWithFanIds(fanIds);
-
-                    StreamEx.of(players)
-                            .filter(player -> StreamEx.of(existingPlayers).findFirst(entity -> entity.getFanId().equals(player.getFanId()))
-                                    .map(playerShortDTO -> {
-                                        player.setProfileImage(playerShortDTO.getProfileImage());
-                                        return playerShortDTO;
-                                    })
-                                    .isPresent())
-                            .forEach(player -> player.setExistsPPS(true));
-
-                    return players;
-                }));
+                .thenApplyAsync(fanServicePlayerDTOS -> StreamEx.of(fanServicePlayerDTOS).map(fans -> modelMapper.map(fans, FanIdDTO.class)).toList()));
     }
 
     @ApiOperation(value = "Search for foreign players")

@@ -19,8 +19,8 @@ public class PlayerSocial {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "fan_Id")
-    private Long fanId;
+    @Column(name = "player_id")
+    private String playerId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "social_media")

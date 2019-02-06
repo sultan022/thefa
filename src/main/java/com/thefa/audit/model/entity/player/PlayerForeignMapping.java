@@ -16,9 +16,9 @@ import javax.persistence.*;
 public class PlayerForeignMapping {
 
     @Id
-    @Column(name = "fan_id")
+    @Column(name = "player_id")
     @EqualsAndHashCode.Include
-    private Long fanId;
+    private String playerId;
 
     @Id
     @Column(name = "source")

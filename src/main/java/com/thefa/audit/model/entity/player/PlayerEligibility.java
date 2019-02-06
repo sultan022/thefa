@@ -13,8 +13,8 @@ import java.io.Serializable;
 public class PlayerEligibility implements Serializable {
 
     @Id
-    @Column(name = "fan_id")
-    private Long fanId;
+    @Column(name = "player_id")
+    private String playerId;
 
     @Id
     @Column(name="country_code")

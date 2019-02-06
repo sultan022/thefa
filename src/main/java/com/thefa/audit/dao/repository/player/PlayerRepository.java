@@ -1,8 +1,6 @@
 package com.thefa.audit.dao.repository.player;
 
 import com.thefa.audit.model.entity.player.Player;
-import com.thefa.audit.model.entity.player.PlayerForeignMapping;
-import com.thefa.audit.model.shared.DataSourceType;
 import com.thefa.audit.model.shared.SquadType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,16 +12,13 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 @Repository
-public interface PlayerRepository extends JpaRepository<Player, Long> {
+public interface PlayerRepository extends JpaRepository<Player, String> {
 
-    Stream<Player> findAllByFanIdIn(List<Long> fanIds);
+    Stream<Player> findAllByPlayerIdIn(List<String> playerIds);
 
-    @Query("FROM PlayerForeignMapping WHERE source = :source AND foreignPlayerId IS NOT NULL")
-    Set<PlayerForeignMapping> findPlayers(@Param("source") DataSourceType source);
+    @Query("SELECT COUNT(p) FROM Player p LEFT JOIN p.playerSquads s WHERE p.playerId IN :playerIds AND s.squad = :squad")
+    long countByPlayerIdInAndPlayerSquadsSquadTypeContaining(@Param("playerIds") Set<String> playerId, @Param("squad") SquadType squadType);
 
-    @Query("SELECT COUNT(p) FROM Player p LEFT JOIN p.playerSquads s WHERE p.fanId IN :fanIds AND s.squad = :squad")
-    long countByFanIdInAndPlayerSquadsSquadTypeContaining(@Param("fanIds") Set<Long> fanId, @Param("squad") SquadType squadType);
-
-    long countByFanIdIn(Set<Long> fanId);
+    long countByPlayerIdIn(Set<String> playerId);
 
 }
