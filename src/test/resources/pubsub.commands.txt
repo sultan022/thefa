@@ -1,4 +1,12 @@
 curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.fnd
-curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.inj
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.squad
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.position
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.mapping
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.audit.player.pps
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/topics/com.thefa.pma.player.req.inj
 curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.fnd.default -H "Content-Type: application/json" -d '{"topic": "projects/the-fa-api-dev/topics/com.thefa.audit.player.fnd", "ackDeadlineSeconds": 600}'
-curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.inj.default -H "Content-Type: application/json" -d '{"topic": "projects/the-fa-api-dev/topics/com.thefa.audit.player.inj", "ackDeadlineSeconds": 600}'
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.squad.default -H "Content-Type: application/json" -d "{\"topic\": \"projects/the-fa-api-dev/topics/com.thefa.audit.player.squad\", \"ackDeadlineSeconds\": 600}"
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.position.default -H "Content-Type: application/json" -d "{\"topic\": \"projects/the-fa-api-dev/topics/com.thefa.audit.player.position\", \"ackDeadlineSeconds\": 600}"
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.mapping.default -H "Content-Type: application/json" -d "{\"topic\": \"projects/the-fa-api-dev/topics/com.thefa.audit.player.mapping\", \"ackDeadlineSeconds\": 600}"
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.audit.player.pps.default -H "Content-Type: application/json" -d '{"topic": "projects/the-fa-api-dev/topics/com.thefa.audit.player.pps", "ackDeadlineSeconds": 600}'
+curl -X PUT localhost:8433/v1/projects/the-fa-api-dev/subscriptions/com.thefa.pma.player.req.inj.default -H "Content-Type: application/json" -d "{\"topic\": \"projects/the-fa-api-dev/topics/com.thefa.pma.player.req.inj\", \"ackDeadlineSeconds\": 600}"

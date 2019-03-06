@@ -44,8 +44,8 @@ public class PlayerIntelService {
     public PageResponse<PlayerIntelDTO> findPlayerIntels(int page, int size, String playerId, IntelType intelType) {
         val pageRequest = PageRequest.of(page, size, Sort.by(desc("createdAt")));
         final Page<PlayerIntel> result = Optional.ofNullable(intelType)
-                .map(it -> playerIntelRepository.findByPlayerIdAndIntelTypeAndArchivedIsFalse(playerId, it, pageRequest))
-                .orElse(playerIntelRepository.findByPlayerIdAndArchivedIsFalse(playerId, pageRequest));
+                .map(it -> playerIntelRepository.findByPlayerIdAndIntelType(playerId, it, pageRequest))
+                .orElse(playerIntelRepository.findByPlayerId(playerId, pageRequest));
 
         return PageResponse
                 .<PlayerIntelDTO>builder()

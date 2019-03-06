@@ -65,16 +65,18 @@ public class ForeignControllerTest extends AbstractIntegrationTest {
     @Test
     public void givenValidRequest_whenSearchForeignPlayer_thenReturnCorrectResult() throws Exception {
 
-        ForeignPlayerDTO optaPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, OPTA);
-        ForeignPlayerDTO scout7Player = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, SCOUT7);
-        ForeignPlayerDTO pmaPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, PMA);
-        ForeignPlayerDTO internalPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, INTERNAL);
-        ForeignPlayerDTO externalPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, PMA_EXTERNAL);
+        FanServicePlayerDTO servicePlayerDTO = new FanServicePlayerDTO();
+        servicePlayerDTO.setFanId(9999999L);
+
+        ForeignPlayerDTO optaPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, null, OPTA, null);
+        ForeignPlayerDTO scout7Player = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, null, SCOUT7, null);
+        ForeignPlayerDTO pmaPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, null, PMA, null);
+        ForeignPlayerDTO externalPlayer = new ForeignPlayerDTO("opta1", "Omer", "Arshad", "M", null, null, null, null, PMA_EXTERNAL, null);
 
         when(optaPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(optaPlayer)));
         when(scout7PlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(scout7Player)));
         when(pmaPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(pmaPlayer)));
-        when(foundationPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(internalPlayer)));
+        when(fanIdService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(servicePlayerDTO)));
         when(pmaExternalPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(externalPlayer)));
 
         MvcResult mvcResult = mvc.perform(post("/foreign/playersSearch")
@@ -84,35 +86,42 @@ public class ForeignControllerTest extends AbstractIntegrationTest {
         mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(5)))
-                .andExpect(jsonPath("$[*].source", containsInAnyOrder("OPTA", "SCOUT7", "PMA", "INTERNAL", "PMA_EXTERNAL")));
+                .andExpect(jsonPath("$[*].source", containsInAnyOrder("OPTA", "SCOUT7", "FAN", "PMA", "PMA_EXTERNAL")));
 
     }
 
     @Test
-    public void givenInvalidRequest_whenSearchFanId_thenReturnBadRequest() throws Exception {
+    public void givenPlayerNotExists_whenSearchForFoundationPlayer_thenReturnExistsFlagNotSet() throws Exception {
 
-        mvc.perform(post("/foreign/fanIdSearch")
-                .contentType(MediaType.APPLICATION_JSON).content(gson.toJson(EMPTY_LOOKUP_REQUEST)))
-                .andExpect(status().isBadRequest());
+        ForeignPlayerDTO fndPlayer = new ForeignPlayerDTO("9999999", "Omer", "Arshad", "M", null, null, null, null, INTERNAL, null);
 
-    }
+        when(foundationPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(fndPlayer)));
 
-    @Test
-    public void givenPlayerNotExists_whenSearchForFanId_thenReturnExistsFlagNotSet() throws Exception {
-
-        FanServicePlayerDTO servicePlayerDTO = new FanServicePlayerDTO();
-        servicePlayerDTO.setFanId(9999999L);
-
-        when(fanIdService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(servicePlayerDTO)));
-
-        MvcResult mvcResult = mvc.perform(post("/foreign/fanIdSearch")
+        MvcResult mvcResult = mvc.perform(post("/foreign/foundationPlayersSearch")
                 .contentType(MediaType.APPLICATION_JSON).content(gson.toJson(VALID_LOOKUP_REQUEST)))
                 .andReturn();
 
         mvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].existsPPS", is(false)));
+                .andExpect(jsonPath("$[0].existsPPS").doesNotExist());
+    }
+
+    @Test
+    public void givenPlayerExists_whenSearchForFoundationPlayer_thenReturnExistsFlagSet() throws Exception {
+
+        ForeignPlayerDTO fndPlayer = new ForeignPlayerDTO("1", "Omer", "Arshad", "M", null, null, null, null, INTERNAL, null);
+
+        when(foundationPlayersBQService.findPlayers(any())).thenReturn(CompletableFuture.completedFuture(Collections.singletonList(fndPlayer)));
+
+        MvcResult mvcResult = mvc.perform(post("/foreign/foundationPlayersSearch")
+                .contentType(MediaType.APPLICATION_JSON).content(gson.toJson(VALID_LOOKUP_REQUEST)))
+                .andReturn();
+
+        mvc.perform(asyncDispatch(mvcResult))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].existsPPS", is(true)));
     }
 
 }

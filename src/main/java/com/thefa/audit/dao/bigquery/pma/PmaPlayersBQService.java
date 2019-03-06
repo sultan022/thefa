@@ -52,10 +52,12 @@ public class PmaPlayersBQService extends AbstractBigQueryService {
                                     names.length >= 1 ? names[0] : null,
                                     names.length >= 2 ? names[1] : null,
                                     getString(row.get("gender")),
+                                    null,
                                     getLocalDate(row.get("dateOfBirth")),
                                     getString(row.get("playersClub")),
                                     null,
-                                    DataSourceType.PMA
+                                    DataSourceType.PMA,
+                                    null
                             );
                         })
                         .toList());

@@ -3,27 +3,36 @@ package com.thefa.audit.dao.service;
 import com.thefa.audit.dao.repository.player.*;
 import com.thefa.audit.model.dto.player.base.PlayerAttachmentDTO;
 import com.thefa.audit.model.dto.player.base.PlayerDTO;
+import com.thefa.audit.model.dto.player.base.PlayerGradeDTO;
+import com.thefa.audit.model.dto.player.base.PlayerImagesDTO;
 import com.thefa.audit.model.dto.player.create.CreatePlayerDTO;
 import com.thefa.audit.model.dto.player.edit.BulkEditPlayerMultipleSquadDTO;
 import com.thefa.audit.model.dto.player.edit.BulkEditPlayerSingleSquadDTO;
 import com.thefa.audit.model.dto.player.edit.EditPlayerDTO;
 import com.thefa.audit.model.dto.player.load.PlayerGradeUploadDTO;
 import com.thefa.audit.model.dto.player.load.PlayerStatusUploadDTO;
-import com.thefa.audit.model.dto.player.small.PlayerShortDTO;
+import com.thefa.audit.model.dto.player.small.PlayerBasicDTO;
 import com.thefa.audit.model.entity.history.PlayerGradeHistory;
 import com.thefa.audit.model.entity.history.PlayerInjuryStatusHistory;
 import com.thefa.audit.model.entity.history.PlayerPositionHistory;
 import com.thefa.audit.model.entity.history.PlayerSquadHistory;
 import com.thefa.audit.model.entity.player.Player;
 import com.thefa.audit.model.entity.player.PlayerAttachment;
-import com.thefa.audit.model.entity.player.PlayerForeignMapping;
-import com.thefa.audit.model.shared.*;
+import com.thefa.audit.model.entity.player.PlayerEligibility;
+import com.thefa.audit.model.entity.reference.Club;
+import com.thefa.audit.model.entity.reference.Country;
+import com.thefa.audit.model.entity.reference.Grade;
+import com.thefa.audit.model.shared.Assignment;
+import com.thefa.audit.model.shared.AttachmentType;
+import com.thefa.audit.model.shared.InjuryStatus;
 import com.thefa.common.dto.shared.PageResponse;
+import com.thefa.common.dto.shared.SquadType;
 import com.thefa.common.util.DateUtil;
 import lombok.NonNull;
 import lombok.extern.apachecommons.CommonsLog;
 import lombok.val;
 import one.util.streamex.StreamEx;
+import org.apache.commons.codec.binary.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,8 +42,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -54,6 +63,9 @@ public class PlayerService {
     private final PlayerInternalMappingCounterService playerCounterService;
     private final PlayerSquadService playerSquadService;
     private final PlayerIntelService playerIntelService;
+    private final PlayerPositionService playerPositionService;
+
+    private final ReferenceService referenceService;
 
     private final PlayerGradeHistoryRepository playerGradeHistoryRepository;
     private final PlayerPositionHistoryRepository playerPositionHistoryRepository;
@@ -70,6 +82,8 @@ public class PlayerService {
                          PlayerAttachmentRepository playerAttachmentRepository,
                          PlayerSquadService playerSquadService,
                          PlayerIntelService playerIntelService,
+                         PlayerPositionService playerPositionService,
+                         ReferenceService referenceService,
                          ModelMapper modelMapper) {
         this.playerRepository = playerRepository;
         this.playerAttachmentRepository = playerAttachmentRepository;
@@ -80,6 +94,8 @@ public class PlayerService {
         this.playerInjuryStatusHistoryRepository = playerInjuryStatusHistoryRepository;
         this.playerSquadService = playerSquadService;
         this.playerIntelService = playerIntelService;
+        this.playerPositionService = playerPositionService;
+        this.referenceService = referenceService;
         this.modelMapper = modelMapper;
     }
 
@@ -108,15 +124,20 @@ public class PlayerService {
     }
 
     public boolean playersExistWithSquadStatus(@NonNull Set<String> playerIds, SquadType squadType) {
-        return playerIds.size() == this.playerRepository.countByPlayerIdInAndPlayerSquadsSquadTypeContaining(playerIds, squadType);
+        return playerIds.size() == this.playerRepository.countByPlayerIdInAndPlayerSquadsSquadTypeContaining(playerIds, squadType.name());
     }
 
-    public Optional<String> updatePlayerProfileImage(@NonNull String playerId, String profileImage) {
+    public Optional<PlayerImagesDTO> updatePlayerProfileImage(@NonNull String playerId, List<String> imageList) {
 
         return this.playerRepository.findById(playerId)
                 .map(playerEntity -> {
-                    playerEntity.setProfileImage(profileImage);
-                    return this.playerRepository.save(playerEntity).getProfileImage();
+                    playerEntity.setProfileImage(imageList.get(0));
+                    playerEntity.setThumbnailImage(imageList.get(1));
+                    playerRepository.save(playerEntity);
+
+                    return new PlayerImagesDTO(playerEntity.getProfileImage(), playerEntity.getThumbnailImage());
+
+
                 });
 
     }
@@ -125,6 +146,21 @@ public class PlayerService {
     public Optional<PlayerDTO> findPlayer(String playerId) {
         return playerRepository.findById(playerId)
                 .map(entity -> modelMapper.map(entity, PlayerDTO.class));
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlayerBasicDTO> getPlayersBasicDetails(Set<String> playerIds) {
+        return playerRepository
+                .findAllByPlayerIdIn(playerIds)
+                .map(player -> modelMapper.map(player, PlayerBasicDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<PlayerBasicDTO> getPlayerBasicDetail(String playerId) {
+        return playerRepository
+                .findById(playerId)
+                .map(player -> modelMapper.map(player, PlayerBasicDTO.class));
     }
 
     public void bulkUpdatePlayersSquads(@NonNull BulkEditPlayerSingleSquadDTO bulkEditPlayerSquadsDTO) {
@@ -153,24 +189,35 @@ public class PlayerService {
 
     public void createPlayer(CreatePlayerDTO createPlayerDTO) {
 
-        Player player = modelMapper.map(createPlayerDTO, Player.class);
-
-        player.setForeignMappings(Optional.ofNullable(player.getForeignMappings()).orElse(new HashSet<>()));
-        if (!StreamEx.of(player.getForeignMappings()).findFirst(t -> t.getSource() == DataSourceType.INTERNAL).isPresent()) {
-
-            player.getForeignMappings().add(new PlayerForeignMapping(
-                    createPlayerDTO.getPlayerId(),
-                    DataSourceType.INTERNAL,
-                    playerCounterService.getNextCounter()
-            ));
+        if (createPlayerDTO.getPlayerId() == null) {
+            createPlayerDTO.setPlayerId(playerCounterService.getNextCounter());
         }
 
-        StreamEx.of(player.getEligibilities()).forEach(eligibility -> eligibility.setPlayerId(createPlayerDTO.getPlayerId()));
-        StreamEx.of(player.getForeignMappings()).forEach(foreignMapping -> foreignMapping.setPlayerId(createPlayerDTO.getPlayerId()));
+        Player player = modelMapper.map(createPlayerDTO, Player.class);
+
+        StreamEx.of(player.getEligibilities()).forEach(eligibility -> {
+            eligibility.setPlayerId(createPlayerDTO.getPlayerId());
+            eligibility.setCountry(referenceService.findCountry(eligibility.getCountryCode()).orElse(null));
+            eligibility.setPlayer(player);
+        });
+        StreamEx.of(player.getForeignMappings()).forEach(foreignMapping -> {
+            foreignMapping.setPlayerId(createPlayerDTO.getPlayerId());
+            foreignMapping.setPlayer(player);
+        });
         StreamEx.of(player.getPlayerIntels()).forEach(playerIntel -> playerIntel.setPlayerId(createPlayerDTO.getPlayerId()));
-        StreamEx.of(player.getPlayerPositions()).forEach(position -> position.setPlayerId(createPlayerDTO.getPlayerId()));
-        StreamEx.of(player.getPlayerSocials()).forEach(social -> social.setPlayerId(createPlayerDTO.getPlayerId()));
-        StreamEx.of(player.getPlayerSquads()).forEach(squad -> squad.setPlayerId(createPlayerDTO.getPlayerId()));
+        StreamEx.of(player.getPlayerPositions()).forEach(position -> {
+            position.setPlayerId(createPlayerDTO.getPlayerId());
+            position.setPlayer(player);
+        });
+        StreamEx.of(player.getPlayerSocials()).forEach(social -> {
+            social.setPlayerId(createPlayerDTO.getPlayerId());
+            social.setPlayer(player);
+        });
+        StreamEx.of(player.getPlayerSquads()).forEach(squad -> {
+            squad.setPlayerId(createPlayerDTO.getPlayerId());
+            squad.setSquad(referenceService.findSquad(squad.getSquadType()).orElse(null));
+            squad.setPlayer(player);
+        });
 
         playerRepository.save(player);
 
@@ -178,7 +225,7 @@ public class PlayerService {
                 .map(grade -> {
                     PlayerGradeHistory gradeHistory = new PlayerGradeHistory();
                     gradeHistory.setPlayerId(createPlayerDTO.getPlayerId());
-                    gradeHistory.setGrade(grade);
+                    gradeHistory.setGrade(grade.getGrade());
                     return gradeHistory;
                 }).ifPresent(playerGradeHistoryRepository::save);
 
@@ -193,7 +240,7 @@ public class PlayerService {
                 }).toListAndThen(playerPositionHistoryRepository::saveAll);
 
         StreamEx.of(player.getPlayerSquads())
-                .map(squadDTO -> new PlayerSquadHistory(createPlayerDTO.getPlayerId(), squadDTO.getSquad(), squadDTO.getStatus(), Assignment.ADDED))
+                .map(squadDTO -> new PlayerSquadHistory(createPlayerDTO.getPlayerId(), squadDTO.getSquadType(), squadDTO.getStatusType(), Assignment.ADDED))
                 .toListAndThen(playerSquadHistoryRepository::saveAll);
 
     }
@@ -208,15 +255,39 @@ public class PlayerService {
                 }).ifPresent(playerGradeHistoryRepository::save);
     }
 
-    public List<PlayerShortDTO> searchPlayersWithPlayerIds(List<String> playerIds) {
-        return playerRepository.findAllByPlayerIdIn(playerIds)
-                .map(entity -> modelMapper.map(entity, PlayerShortDTO.class))
-                .collect(Collectors.toList());
-    }
-
     public void editPlayer(EditPlayerDTO editPlayerDTO) {
 
         playerRepository.findById(editPlayerDTO.getPlayerId()).ifPresent(entity -> {
+
+            entity.setFirstName(editPlayerDTO.getFirstName());
+            entity.setMiddleName(editPlayerDTO.getMiddleName());
+            entity.setLastName(editPlayerDTO.getLastName());
+            entity.setKnownName(editPlayerDTO.getKnownName());
+            entity.setDateOfBirth(DateUtil.toDate(editPlayerDTO.getDateOfBirth()));
+            entity.setGender(editPlayerDTO.getGender());
+            entity.setClub(Optional.ofNullable(editPlayerDTO.getClub()).map(clubDTO -> new Club(clubDTO.getId())).orElse(null));
+
+            entity.getEligibilities().removeIf(playerEligibility -> !StreamEx.of(editPlayerDTO.getEligibilities())
+                                                                        .findAny(p -> p.getCountryCode().equals(playerEligibility.getCountryCode())).isPresent());
+            Set<String> existingCountries = StreamEx.of(entity.getEligibilities()).map(PlayerEligibility::getCountry).map(Country::getCountryCode).toSet();
+            StreamEx.of(editPlayerDTO.getEligibilities())
+                    .filter(countryDTO -> !existingCountries.contains(countryDTO.getCountryCode()))
+                    .map(country -> new PlayerEligibility(editPlayerDTO.getPlayerId(),
+                            referenceService.findCountry(country.getCountryCode()).orElse(null),
+                            null))
+                    .forEach(entity.getEligibilities()::add);
+
+            playerSquadService.updatePlayerSquads(entity, editPlayerDTO.getPlayerSquads());
+            playerPositionService.updatePlayerPositions(entity, editPlayerDTO.getPlayerPositions());
+
+            String editGrade = Optional.ofNullable(editPlayerDTO.getPlayerGrade()).map(PlayerGradeDTO::getGrade).orElse(null);
+            if (!StringUtils.equals(
+                    Optional.ofNullable(entity.getPlayerGrade()).map(Grade::getGrade).orElse(null),
+                    editGrade)
+            ) {
+                addPlayerGradeHistory(editPlayerDTO.getPlayerId(), editGrade);
+                entity.setPlayerGrade(Optional.ofNullable(editGrade).map(g -> new Grade(g, null)).orElse(null));
+            }
 
             playerIntelService.updatePlayerIntels(entity, editPlayerDTO.getPlayerIntels());
 
@@ -229,36 +300,44 @@ public class PlayerService {
         playersGradePayload.forEach(
                 gradePayload -> {
                     Player player = playerRepository.getOne(gradePayload.getPlayerId());
-                    addPlayerGradeHistory(player.getPlayerId(), gradePayload.getGrade());
-                    player.setPlayerGrade(gradePayload.getGrade());
+                    if (!StringUtils.equals(
+                            Optional.ofNullable(player.getPlayerGrade()).map(Grade::getGrade).orElse(null),
+                            gradePayload.getGrade())) {
+                        addPlayerGradeHistory(player.getPlayerId(), gradePayload.getGrade());
+                        player.setPlayerGrade(new Grade(gradePayload.getGrade(), null));
+                    }
                 });
     }
 
-    public void updatePlayerInjuryGroup(String playerId, InjuryStatus injuryStatus) {
+    public void updatePlayerInjuryGroup(String playerId, InjuryStatus injuryStatus, LocalDate expectedReturnDate) {
         playerRepository.findById(playerId)
-            .ifPresent(player -> {
-                    if (player.getInjuryStatus() != injuryStatus){
-                         player.setInjuryStatus(injuryStatus);
-                         playerInjuryStatusHistoryRepository.save(
-                                 new PlayerInjuryStatusHistory(playerId, injuryStatus)
-                         );
+                .ifPresent(player -> {
+                    player.setInjuryStatus(injuryStatus);
+                    player.setExpectedReturnDate(
+                            Optional.ofNullable(expectedReturnDate).map(DateUtil::toDate).orElse(null)
+                    );
+                    if (player.getInjuryStatus() != injuryStatus) {
+                        playerInjuryStatusHistoryRepository.save(
+                                new PlayerInjuryStatusHistory(playerId, injuryStatus)
+                        );
                     }
-            });
+                });
     }
 
-    public void editPlayers(Set<PlayerStatusUploadDTO> editPlayerStatusDTOList) {
+    public void updateVulnerabilityStatus(Set<PlayerStatusUploadDTO> editPlayerStatusDTOList) {
+        
         StreamEx.of(editPlayerStatusDTOList)
                 .forEach(dto -> {
                     Player player = playerRepository.getOne(dto.getPlayerId());
+                    player.setMaturationStatus(dto.getMaturationStatus());
+                    player.setMaturationDate(toDate(dto.getMaturationDate()));
+                    player.setVulnerabilityStatus(dto.getVulnerabilityStatus());
+                    player.setVulnerabilityDate(toDate(dto.getVulnerabilityDate()));
+                    player.setVulnerabilityStatus4Weeks(dto.getVulnerabilityStatus4Weeks());
+                    player.setVulnerabilityStatus8Weeks(dto.getVulnerabilityStatus8Weeks());
+                    player.setVulnerabilityStatus12Weeks(dto.getVulnerabilityStatus12Weeks());
 
-                    if (dto.isValidMaturation()) {
-                        player.setMaturationStatus(dto.getMaturationStatus());
-                        player.setMaturationDate(toDate(dto.getMaturationDate()));
-                    }
-                    if (dto.isValidVulnerability()) {
-                        player.setVulnerabilityStatus(dto.getVulnerabilityStatus());
-                        player.setVulnerabilityDate(toDate(dto.getVulnerabilityDate()));
-                    }
+                    playerRepository.save(player);
                 });
     }
 
@@ -286,4 +365,6 @@ public class PlayerService {
                 .collect(Collectors.toList());
     }
 
+    public void updatePlayerProfileAndThumbnailImage(Map imageUriMap, String playerId) {
+    }
 }

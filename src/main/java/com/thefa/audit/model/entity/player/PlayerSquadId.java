@@ -1,6 +1,5 @@
 package com.thefa.audit.model.entity.player;
 
-import com.thefa.audit.model.shared.SquadType;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -10,7 +9,6 @@ public class PlayerSquadId implements Serializable {
 
     private String playerId;
 
-    private SquadType squad;
-
+    private String squad;
 
 }

@@ -1,22 +1,43 @@
 package com.thefa.audit.model.dto.player.base;
 
 
-import com.thefa.audit.model.shared.SquadType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.thefa.audit.model.dto.rerference.SquadDTO;
+import com.thefa.audit.model.dto.rerference.SquadStatusDTO;
 import com.thefa.audit.model.shared.SquadStatusType;
+import com.thefa.common.dto.shared.SquadType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class PlayerSquadDTO {
 
     @EqualsAndHashCode.Include
-    @NotNull
-    private SquadType squad;
+    @NotNull @Valid
+    private SquadDTO squad;
 
-    private SquadStatusType status;
+    @Valid
+    private SquadStatusDTO status;
 
+    @JsonIgnore
+    public SquadStatusType getStatusType() {
+        return Optional.ofNullable(status)
+                .map(SquadStatusDTO::getStatus)
+                .map(SquadStatusType::valueOf)
+                .orElse(null);
+    }
+
+    @JsonIgnore
+    public SquadType getSquadType() {
+        return Optional.ofNullable(squad)
+                .map(SquadDTO::getSquad)
+                .map(SquadType::valueOf)
+                .orElse(null);
+    }
 
 }

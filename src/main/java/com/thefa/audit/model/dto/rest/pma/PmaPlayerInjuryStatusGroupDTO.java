@@ -12,6 +12,9 @@ public class PmaPlayerInjuryStatusGroupDTO {
     @JsonProperty("InjuryStatusGroup")
     private String injuryStatusGroup;
 
+    @JsonProperty("EstimatedReturnDate")
+    private PmaDate estimatedReturnDate;
+
     public InjuryStatus toInjuryStatus() {
         switch (injuryStatusGroup.toLowerCase()) {
             case "fit":

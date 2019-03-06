@@ -21,6 +21,7 @@ create table fa_source
 create table fa_squad
 (
   squad       varchar(50) not null primary  key,
+  squad_order int not null,
   description varchar(255) null
 );
 

@@ -1,6 +1,7 @@
 package com.thefa.audit.model.dto.foreign;
 
-import com.thefa.audit.model.shared.Gender;
+import com.thefa.audit.model.shared.DataSourceType;
+import com.thefa.common.dto.shared.Gender;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -36,6 +37,17 @@ public class FanIdDTO {
 
     private String profileImage;
 
-    private boolean existsPPS;
+    public ForeignPlayerDTO toForeignPlayerDTO() {
+        ForeignPlayerDTO foreignPlayerDTO = new ForeignPlayerDTO();
+
+        foreignPlayerDTO.setForeignPlayerId(fanId == null ? null : String.valueOf(fanId));
+        foreignPlayerDTO.setFirstName(firstName);
+        foreignPlayerDTO.setLastName(lastName);
+        foreignPlayerDTO.setDateOfBirth(dateOfBirth);
+        foreignPlayerDTO.setGender(gender == null ? null : gender.name());
+        foreignPlayerDTO.setSource(DataSourceType.FAN);
+
+        return foreignPlayerDTO;
+    }
 
 }

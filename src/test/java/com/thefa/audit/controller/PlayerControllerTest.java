@@ -3,26 +3,24 @@ package com.thefa.audit.controller;
 import com.thefa.audit.config.AbstractIntegrationTest;
 import com.thefa.audit.dao.service.PlayerService;
 import com.thefa.audit.model.dto.player.base.PlayerDTO;
-import com.thefa.audit.model.dto.pubsub.FndRecordUpdateMsgDTO;
 import com.thefa.audit.model.shared.SquadStatusType;
-import com.thefa.audit.model.shared.SquadType;
-import com.thefa.audit.pubsub.publisher.FndPlayerUpdatedPublisher;
+import com.thefa.audit.service.PlayerDataSyncTriggerService;
 import com.thefa.audit.util.TestCaseUtil;
-import com.thefa.common.cache.CacheService;
+import com.thefa.common.dto.shared.SquadType;
 import one.util.streamex.StreamEx;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
-import static com.thefa.audit.pubsub.publisher.FndPlayerUpdatedPublisher.FND_PREFIX;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,13 +28,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class PlayerControllerTest extends AbstractIntegrationTest {
 
     @SpyBean
-    private CacheService cacheService;
-
-    @SpyBean
     private PlayerService playerService;
 
-    @SpyBean
-    private FndPlayerUpdatedPublisher playerUpdatedPublisher;
+    @MockBean
+    private PlayerDataSyncTriggerService playerDataSyncTriggerService;
 
     @Test
     public void givenPlayers_whenGetPlayers_thenReturnCorrectJson() throws Exception {
@@ -44,9 +39,7 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
         mvc.perform(get("/players")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.data.content[0].playerId", is("1")))
-                .andExpect(jsonPath("$.data.content[0].firstName", is("Nayyer")));
+                .andExpect(jsonPath("$.success", is(true)));
     }
 
     @Test
@@ -54,21 +47,40 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
 
         String json = validPlayerJsonWithPlayerId("11000");
 
-        ArgumentCaptor<FndRecordUpdateMsgDTO> fndMsgPublish = ArgumentCaptor.forClass(FndRecordUpdateMsgDTO.class);
+        ArgumentCaptor<PlayerDTO> updateServicePlayer = ArgumentCaptor.forClass(PlayerDTO.class);
 
         mvc.perform(post("/players")
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success", is(true)))
-                .andExpect(jsonPath("$.data.foreignMappings[0].source", is("INTERNAL")));
+                .andExpect(jsonPath("$.success", is(true)));
 
         verify(playerService).createPlayer(any());
-        verify(cacheService).setValue(eq(FND_PREFIX + 11000), notNull(), eq(1L), eq(TimeUnit.DAYS));
-        verify(playerUpdatedPublisher).publish(fndMsgPublish.capture());
+        verify(playerDataSyncTriggerService).newPlayerCreated(updateServicePlayer.capture());
 
-        PlayerDTO publishPlayerDTO = fndMsgPublish.getValue().getData();
+        PlayerDTO publishPlayerDTO = updateServicePlayer.getValue();
         assertEquals("Wrong playerId for published message", "11000", publishPlayerDTO.getPlayerId());
+
+    }
+
+    @Test
+    public void givenValidPlayerWithoutId_whenCreatePlayer_thenSavePlayer() throws Exception {
+
+        String json = validPlayerJsonWithoutPlayerId();
+
+        ArgumentCaptor<PlayerDTO> updateServicePlayer = ArgumentCaptor.forClass(PlayerDTO.class);
+
+        mvc.perform(post("/players")
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success", is(true)));
+
+        verify(playerService).createPlayer(any());
+        verify(playerDataSyncTriggerService).newPlayerCreated(updateServicePlayer.capture());
+
+        PlayerDTO publishPlayerDTO = updateServicePlayer.getValue();
+        assertNotNull("Wrong playerId for published message", publishPlayerDTO.getPlayerId());
 
     }
 
@@ -109,9 +121,8 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-    private static String validPlayerJsonWithPlayerId(String playerId) {
+    private static String validPlayerJsonWithoutPlayerId() {
         return "{" +
-                "\"playerId\": \"" + playerId + "\",\n" +
                 "\"firstName\":\"Omer\"," +
                 "\"lastName\":\"Arshad\"," +
                 "\"dateOfBirth\":\"1970-01-01\"," +
@@ -119,9 +130,51 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 "}";
     }
 
+    private static String validPlayerJsonWithPlayerId(String playerId) {
+        return "{" +
+                "\"playerId\": \"" + playerId + "\",\n" +
+                "\"firstName\":\"Omer\"," +
+                "\"lastName\":\"Arshad\"," +
+                "\"dateOfBirth\":\"1970-01-01\"," +
+                "\"gender\":\"M\"," +
+                "\"playerGrade\":{\"grade\":\"A1\"}," +
+                "\"eligibilities\":[{\"countryCode\":\"ENG\"}]," +
+                "\"playerSquads\":" + "[" +
+                            "{" +
+                                "\"squad\":{\"squad\":\"SENIORS\"}," +
+                                "\"status\":{\"status\":\"MONITOR\"}" +
+                            "}" +
+                        "]," +
+                "\"foreignMappings\":" + "[" +
+                            "{" +
+                                "\"source\":\"OPTA\"," +
+                                "\"foreignPlayerId\":\"dummy_id\"" +
+                            "}" +
+                        "]" +
+                "}";
+    }
+
     private static String validEditPlayerJsonWithPlayerId(String playerId, Long intelId) {
         return "{" +
                 "\"playerId\": \"" + playerId + "\",\n" +
+                "\"firstName\":\"Omer\"," +
+                "\"lastName\":\"Arshad\"," +
+                "\"dateOfBirth\":\"1970-01-01\"," +
+                "\"gender\":\"M\"," +
+                "\"playerGrade\":{\"grade\":\"A1\"}," +
+                "\"eligibilities\":[{\"countryCode\":\"ENG\"}]," +
+                "\"playerSquads\":" + "[" +
+                "{" +
+                "\"squad\":{\"squad\":\"SENIORS\"}," +
+                "\"status\":{\"status\":\"MONITOR\"}" +
+                "}" +
+                "]," +
+                "\"foreignMappings\":" + "[" +
+                "{" +
+                "\"source\":\"OPTA\"," +
+                "\"foreignPlayerId\":\"dummy_id\"" +
+                "}" +
+                "]," +
                 "\"playerIntels\": [" +
                 "{" +
                 "\"id\":" + intelId + "," +
@@ -160,36 +213,6 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 .content(json)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    public void givenPlayersWithInValidDataAndExist_whenEditPlayers_thenThrowsException() throws Exception {
-
-        String validPlayerId1 = "1";
-        String json = TestCaseUtil.editPlayersJsonWithEmptyData(validPlayerId1);
-
-        mvc.perform(put("/players/upload/statuses")
-                .content(json)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    public void givenPlayersWithOnePlayerEmptyDateAndExist_whenEditPlayers_thenThrowsException() throws Exception {
-
-        String validPlayerId1 = "1";
-        String validPlayerId2 = "2";
-
-        LocalDate murationDate = LocalDate.parse("2018-12-31");
-        LocalDate vulnerabilityDate = LocalDate.parse("2018-12-31");
-
-        String json = TestCaseUtil.editPlayersJsonWithPlayerIdsAndEmptyData(validPlayerId1, murationDate, vulnerabilityDate, validPlayerId2);
-
-
-        mvc.perform(put("/players/upload/statuses")
-                .content(json)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -239,22 +262,22 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
         Optional<PlayerDTO> player = playerService.findPlayer("3");
         assertTrue("Player Should Exist", player.isPresent());
         assertTrue("Player Squad should be present",
-                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());
+                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.U21).isPresent());
         assertFalse("Player Squad should not be present",
-                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.SENIORS).isPresent());
+                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.SENIORS).isPresent());
 
         mvc.perform(put("/players/squads/single")
-            .content(json)
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
+                .content(json)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
         Optional<PlayerDTO> playerAfter = playerService.findPlayer("3");
         assertTrue("Player Should Exist", playerAfter.isPresent());
         assertFalse("Player Squad should not be present",
-                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());
+                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.U21).isPresent());
         assertTrue("Player Squad should be present",
-                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.SENIORS &&
-                        squad.getStatus() == SquadStatusType.MONITOR).isPresent());
+                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.SENIORS &&
+                        squad.getStatusType() == SquadStatusType.MONITOR).isPresent());
 
     }
 
@@ -265,20 +288,20 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
                 "{" +
                 "\"playerId\": 5," +
                 "\"squads\": [" +
-                            "{" +
-                                "\"squad\":\"SENIORS\"," +
-                                "\"status\":\"MONITOR\"" +
-                            "}" +
-                        "]" +
-                    "}" +
+                "{" +
+                "\"squad\":\"SENIORS\"," +
+                "\"status\":\"MONITOR\"" +
+                "}" +
+                "]" +
+                "}" +
                 "]";
 
         Optional<PlayerDTO> player = playerService.findPlayer("5");
         assertTrue("Player Should Exist", player.isPresent());
         assertTrue("Player Squad should be present",
-                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());
+                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.U21).isPresent());
         assertFalse("Player Squad should not be present",
-                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.SENIORS).isPresent());
+                StreamEx.of(player.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.SENIORS).isPresent());
 
         mvc.perform(put("/players/squads/multiple")
                 .content(json)
@@ -288,9 +311,9 @@ public class PlayerControllerTest extends AbstractIntegrationTest {
         Optional<PlayerDTO> playerAfter = playerService.findPlayer("5");
         assertTrue("Player Should Exist", playerAfter.isPresent());
         assertFalse("Player Squad should not be present",
-                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.U21).isPresent());
+                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.U21).isPresent());
         assertTrue("Player Squad should be present",
-                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquad() == SquadType.SENIORS).isPresent());
+                StreamEx.of(playerAfter.get().getPlayerSquads()).findAny(squad -> squad.getSquadType() == SquadType.SENIORS).isPresent());
 
     }
 

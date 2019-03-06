@@ -1,8 +1,8 @@
 package com.thefa.audit.controller;
 
 import com.thefa.audit.dao.service.PlayerForeignMappingService;
-import com.thefa.audit.model.dto.pubsub.InjRecordUpdateMsgDTO;
-import com.thefa.audit.pubsub.publisher.InjPlayerUpdatedPublisher;
+import com.thefa.audit.model.dto.pubsub.InjRecordUpdateReqMsgDTO;
+import com.thefa.audit.pubsub.publisher.PlayerInjUpdateReqPublisher;
 import com.thefa.common.dto.shared.ApiResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -20,12 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class CronController {
 
     private final PlayerForeignMappingService playerForeignMappingService;
-    private final InjPlayerUpdatedPublisher injPlayerUpdatedPublisher;
+    private final PlayerInjUpdateReqPublisher injPlayerUpdatedPublisher;
 
 
     @Autowired
     public CronController(PlayerForeignMappingService playerForeignMappingService,
-                          InjPlayerUpdatedPublisher injPlayerUpdatedPublisher) {
+                          PlayerInjUpdateReqPublisher injPlayerUpdatedPublisher) {
         this.playerForeignMappingService = playerForeignMappingService;
         this.injPlayerUpdatedPublisher = injPlayerUpdatedPublisher;
     }
@@ -35,7 +35,7 @@ public class CronController {
     public ApiResponse<String> findPmaExternalPlayers() {
 
         StreamEx.of(playerForeignMappingService.findPmaExternalPlayers())
-                .map(foreignPlayer -> new InjRecordUpdateMsgDTO(foreignPlayer.getPlayerId(), foreignPlayer.getForeignPlayerId()))
+                .map(foreignPlayer -> new InjRecordUpdateReqMsgDTO(foreignPlayer.getPlayerId(), foreignPlayer.getForeignPlayerId()))
                 .forEach(injPlayerUpdatedPublisher::publish);
 
         return ApiResponse.success("OK");

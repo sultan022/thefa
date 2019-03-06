@@ -19,7 +19,7 @@ public class PlayerSocial {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "player_id")
+    @Column(name = "player_id", nullable = false)
     private String playerId;
 
     @Enumerated(EnumType.STRING)
@@ -32,5 +32,9 @@ public class PlayerSocial {
     @Column(name = "created_at")
     @CreatedDate
     private ZonedDateTime createdAt;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", insertable = false, updatable = false)
+    private Player player;
 
 }

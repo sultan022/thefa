@@ -1,10 +1,9 @@
 package com.thefa.audit.model.dto.player.create;
 
-import com.thefa.audit.model.dto.player.base.PlayerForeignMappingDTO;
-import com.thefa.audit.model.dto.player.base.PlayerPositionDTO;
-import com.thefa.audit.model.dto.player.base.PlayerSquadDTO;
+import com.thefa.audit.model.dto.player.base.*;
 import com.thefa.audit.model.dto.rerference.ClubDTO;
-import com.thefa.audit.model.shared.Gender;
+import com.thefa.audit.model.dto.rerference.CountryDTO;
+import com.thefa.common.dto.shared.Gender;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
@@ -21,7 +20,6 @@ import java.util.Set;
 public class CreatePlayerDTO {
 
     @EqualsAndHashCode.Include
-    @NotNull
     private String playerId;
 
     @NotEmpty @Length(min = 3, max = 255)
@@ -42,8 +40,8 @@ public class CreatePlayerDTO {
     @NotNull
     private Gender gender;
 
-    @Length(max = 2)
-    private String playerGrade;
+    @Valid
+    private PlayerGradeDTO playerGrade;
 
     @Valid
     private ClubDTO club;
@@ -51,7 +49,8 @@ public class CreatePlayerDTO {
     @Valid
     private Set<PlayerForeignMappingDTO> foreignMappings = new HashSet<>();
 
-    private Set<String> eligibilities = new HashSet<>();
+    @Valid
+    private Set<CountryDTO> eligibilities = new HashSet<>();
 
     @Valid
     private Set<PlayerSquadDTO> playerSquads = new HashSet<>();

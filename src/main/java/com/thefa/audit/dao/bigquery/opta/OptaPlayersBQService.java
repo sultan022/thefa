@@ -45,10 +45,12 @@ public class OptaPlayersBQService extends AbstractBigQueryService {
                                 getString(row.get("firstName")),
                                 getString(row.get("lastName")),
                                 getString(row.get("gender")),
+                                null,
                                 getLocalDate(row.get("dateOfBirth")),
                                 null,
                                 getString(row.get("nationality")),
-                                DataSourceType.OPTA
+                                DataSourceType.OPTA,
+                                null
                         ))
                         .toList());
 

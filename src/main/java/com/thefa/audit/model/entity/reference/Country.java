@@ -1,7 +1,9 @@
 package com.thefa.audit.model.entity.reference;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,7 +12,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "fa_country")
-@Data
+@Data @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Country {
 
@@ -27,4 +29,8 @@ public class Country {
 
     @Column(name = "rank")
     private Integer rank;
+
+    public Country(String countryCode) {
+        this.countryCode = countryCode;
+    }
 }

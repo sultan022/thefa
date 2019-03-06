@@ -45,22 +45,22 @@ public class TestCaseUtil {
                 "]";
     }
 
-    public static String editPlayersJsonWithPlayerIdsAndEmptyData(String validPlayerId1, LocalDate murationDate, LocalDate vulnerabilityDate, String validPlayerId2) {
-        return "[\n" +
-                "\t{\n" +
-                "\t\t\"playerId\": \"" + validPlayerId1 + "\",\n" +
-                "\t\t\"maturationStatus\": \"EARLY\",\n" +
-                "\t\t\"maturationDate\": \"" + murationDate + "\",\n" +
-                "\t\t\"vulnerabilityStatus\": 1,\n" +
-                "\t\t\"vulnerabilityDate\": \"" + vulnerabilityDate + "\"\n" +
-                "\t},{\n" +
-                "\t\t\"playerId\": \"" + validPlayerId2 + "\",\n" +
-                "\t\t\"maturationStatus\": \"EARLY\",\n" +
-                "\t\t\"vulnerabilityStatus\": 2\n" +
-                "\t}\n" +
-                "]";
-
-    }
+//    public static String editPlayersJsonWithPlayerIdsAndEmptyData(String validPlayerId1, LocalDate murationDate, LocalDate vulnerabilityDate, String validPlayerId2) {
+//        return "[\n" +
+//                "\t{\n" +
+//                "\t\t\"playerId\": \"" + validPlayerId1 + "\",\n" +
+//                "\t\t\"maturationStatus\": \"EARLY\",\n" +
+//                "\t\t\"maturationDate\": \"" + murationDate + "\",\n" +
+//                "\t\t\"vulnerabilityStatus\": 1,\n" +
+//                "\t\t\"vulnerabilityDate\": \"" + vulnerabilityDate + "\"\n" +
+//                "\t},{\n" +
+//                "\t\t\"playerId\": \"" + validPlayerId2 + "\",\n" +
+//                "\t\t\"maturationStatus\": \"EARLY\",\n" +
+//                "\t\t\"vulnerabilityStatus\": 2\n" +
+//                "\t}\n" +
+//                "]";
+//
+//    }
 
     public static String editPlayersJsonWithPlayerIdsAndSpacificData(String validPlayerId1, LocalDate murationDate, LocalDate vulnerabilityDate, String validPlayerId2) {
         return "[\n" +
@@ -93,15 +93,15 @@ public class TestCaseUtil {
 
     }
 
-    public static String editPlayersJsonWithEmptyData(String validPlayerId1) {
-        return "[\n" +
-                "\t{\n" +
-                "\t\t\"playerId\": \"" + validPlayerId1 + "\",\n" +
-                "\t\t\"maturationStatus\": \"EARLY\",\n" +
-                "\t\t\"vulnerabilityStatus\": 1\n" +
-                "\t},{\n" +
-                "\t}\n" +
-                "]";
-
-    }
+//    public static String editPlayersJsonWithEmptyData(String validPlayerId1) {
+//        return "[\n" +
+//                "\t{\n" +
+//                "\t\t\"playerId\": \"" + validPlayerId1 + "\",\n" +
+//                "\t\t\"maturationStatus\": \"EARLY\",\n" +
+//                "\t\t\"vulnerabilityStatus\": 1\n" +
+//                "\t},{\n" +
+//                "\t}\n" +
+//                "]";
+//
+//    }
 }

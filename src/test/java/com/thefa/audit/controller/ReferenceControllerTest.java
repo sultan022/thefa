@@ -1,13 +1,8 @@
 package com.thefa.audit.controller;
 
 import com.thefa.audit.config.AbstractIntegrationTest;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,5 +38,15 @@ public class ReferenceControllerTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2279)));
+    }
+
+    @Test
+    public void givenSquads_whenGetSquads_thenReturnCorrectNumberOfSquads() throws Exception {
+
+        mvc.perform(get("/reference/squads")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(8)));
+
     }
 }

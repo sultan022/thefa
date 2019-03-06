@@ -5,8 +5,8 @@ import com.google.cloud.Timestamp;
 import com.thefa.audit.model.dto.player.base.PlayerDTO;
 import com.thefa.audit.model.dto.player.base.PlayerPositionDTO;
 import com.thefa.audit.model.dto.player.base.PlayerSocialDTO;
-import com.thefa.audit.model.shared.DataSourceType;
-import com.thefa.audit.model.shared.Gender;
+import com.thefa.audit.model.dto.rerference.CountryDTO;
+import com.thefa.common.dto.shared.Gender;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -51,6 +51,8 @@ public class FndPlayersTable {
     private boolean isEnglandPlayer;
 
     private String playerPhotoURL;
+
+    private String thumbnailImage;
 
     private Integer primaryPositionNumber;
 
@@ -98,9 +100,7 @@ public class FndPlayersTable {
 
         FndPlayersTable fndPlayers = new FndPlayersTable();
 
-        StreamEx.of(playerDTO.getForeignMappings())
-                .findFirst(mapping -> mapping.getSource() == DataSourceType.INTERNAL)
-                .ifPresent(internal -> fndPlayers.playerId = internal.getForeignPlayerId().replace(INTERNAL_ID_PREFIX, ""));
+        fndPlayers.playerId = playerDTO.getPlayerId().replace(INTERNAL_ID_PREFIX, "");
 
         fndPlayers.fullName = StreamEx.of(playerDTO.getFirstName(), playerDTO.getMiddleName(), playerDTO.getLastName())
                                 .filter(Objects::nonNull)
@@ -115,20 +115,22 @@ public class FndPlayersTable {
         fndPlayers.gender = playerDTO.getGender() == null ? null : (playerDTO.getGender() == Gender.M ? "male" : "female");
 
         fndPlayers.playerPhotoURL = playerDTO.getProfileImage();
+        fndPlayers.thumbnailImage = playerDTO.getThumbnailImage();
 
-        StreamEx.of(playerDTO.getEligibilities()).findFirst(t -> t.equals("ENG")).ifPresent(eng -> {
+        StreamEx.of(playerDTO.getEligibilities()).findFirst(t -> t.getCountryCode().equals("ENG")).ifPresent(eng -> {
             fndPlayers.setNationality("England");
             fndPlayers.isEngland = true;
             fndPlayers.isEnglandPlayer = true;
         });
 
-        EntryStream.of(StreamEx.of(playerDTO.getEligibilities()).without("ENG").sorted().limit(2).toList()).forKeyValue((i, v) -> {
+        EntryStream.of(StreamEx.of(playerDTO.getEligibilities()).filter(t -> !t.getCountryCode().equals("ENG"))
+                .sortedBy(CountryDTO::getCountryName).limit(2).toList()).forKeyValue((i, v) -> {
             switch (i) {
                 case 0:
-                    fndPlayers.otherEligibileNation = v;
+                    fndPlayers.otherEligibileNation = v.getCountryName();
                     break;
                 case 1:
-                    fndPlayers.otherEligibileNation2 = v;
+                    fndPlayers.otherEligibileNation2 = v.getCountryName();
                     break;
             }
         });
@@ -153,9 +155,9 @@ public class FndPlayersTable {
         });
 
         fndPlayers.englandSquadId = StreamEx.of(playerDTO.getPlayerSquads())
-                                        .sortedByInt(squad -> squad.getSquad().ordinal())
+                                        .sortedByInt(squad -> squad.getSquadType().ordinal())
                                         .findFirst()
-                                        .map(squad -> squad.getSquad().name())
+                                        .map(squad -> squad.getSquadType().name())
                                         .orElse(null);
         fndPlayers.ageCategory = fndPlayers.englandSquadId;
 

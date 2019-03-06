@@ -18,6 +18,8 @@ public class ForeignPlayerDTO {
 
     private String gender;
 
+    private String profileImage;
+
     private LocalDate dateOfBirth;
 
     private String clubName;
@@ -25,4 +27,6 @@ public class ForeignPlayerDTO {
     private String nationality;
 
     private DataSourceType source;
+
+    private Boolean existsPPS;
 }

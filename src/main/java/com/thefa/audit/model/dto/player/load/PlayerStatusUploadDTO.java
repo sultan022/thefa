@@ -26,26 +26,20 @@ public class PlayerStatusUploadDTO {
 
     private LocalDate vulnerabilityDate;
 
+    @Range(min = 1, max = 7)
+    private Integer vulnerabilityStatus4Weeks;
+
+    @Range(min = 1, max = 7)
+    private Integer vulnerabilityStatus8Weeks;
+    
+    @Range(min = 1, max = 7)
+    private Integer vulnerabilityStatus12Weeks;
+
     @JsonIgnore
     public boolean isEmpty() {
-        return this.maturationStatus == null && this.maturationDate == null && this.vulnerabilityStatus == null && this.vulnerabilityDate == null;
+        return this.maturationStatus == null && this.maturationDate == null && this.vulnerabilityStatus == null && this.vulnerabilityDate == null
+                && this.vulnerabilityStatus4Weeks == null && this.vulnerabilityStatus8Weeks == null && this.vulnerabilityStatus12Weeks == null;
     }
 
-    @JsonIgnore
-    public boolean isValidMaturation() {
-        return (this.maturationStatus != null && this.maturationDate != null);
-
-    }
-
-    @JsonIgnore
-    public boolean isValidVulnerability() {
-        return (this.vulnerabilityStatus != null && this.vulnerabilityDate != null);
-
-    }
-
-    @JsonIgnore
-    public boolean isValidData() {
-        return isValidMaturation() || isValidVulnerability();
-    }
 
 }

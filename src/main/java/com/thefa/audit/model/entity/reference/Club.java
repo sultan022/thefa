@@ -1,14 +1,16 @@
 package com.thefa.audit.model.entity.reference;
 
 import com.thefa.audit.model.shared.TeamType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "fa_club")
-@Data
+@Data @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Club {
 
@@ -48,4 +50,7 @@ public class Club {
     @Column(name = "is_active")
     private boolean isActive;
 
+    public Club(String id) {
+        this.id = id;
+    }
 }

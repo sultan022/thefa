@@ -44,10 +44,12 @@ public class Scout7PlayersBQService extends AbstractBigQueryService {
                                 getString(row.get("FirstName")),
                                 getString(row.get("LastName")),
                                 null,
+                                null,
                                 getLocalDate(row.get("DateOfBirth")),
                                 getString(row.get("ClubName")),
                                 getString(row.get("Nationality")),
-                                DataSourceType.SCOUT7
+                                DataSourceType.SCOUT7,
+                                null
                         ))
                         .toList());
     }

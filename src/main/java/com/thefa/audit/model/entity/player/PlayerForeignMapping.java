@@ -16,16 +16,20 @@ import javax.persistence.*;
 public class PlayerForeignMapping {
 
     @Id
-    @Column(name = "player_id")
+    @Column(name = "player_id", nullable = false)
     @EqualsAndHashCode.Include
     private String playerId;
 
     @Id
-    @Column(name = "source")
+    @Column(name = "source", nullable = false)
     @Enumerated(EnumType.STRING)
     @EqualsAndHashCode.Include
     private DataSourceType source;
 
     @Column(name = "foreign_id")
     private String foreignPlayerId;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_id", insertable = false, updatable = false)
+    private Player player;
 }

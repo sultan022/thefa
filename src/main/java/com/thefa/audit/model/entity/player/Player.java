@@ -1,9 +1,10 @@
 package com.thefa.audit.model.entity.player;
 
 import com.thefa.audit.model.entity.reference.Club;
-import com.thefa.audit.model.shared.Gender;
+import com.thefa.audit.model.entity.reference.Grade;
 import com.thefa.audit.model.shared.InjuryStatus;
 import com.thefa.audit.model.shared.MaturationStatus;
+import com.thefa.common.dto.shared.Gender;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -60,19 +61,21 @@ public class Player {
     @Column(name = "profile_image")
     private String profileImage;
 
-    @Column(name = "player_grade")
-    private String playerGrade;
+    @Column(name = "thumbnail_image")
+    private String thumbnailImage;
+
+    @ManyToOne(cascade = CascadeType.DETACH)
+    @JoinColumn(name = "player_grade")
+    private Grade playerGrade;
 
     @ManyToOne
     @JoinColumn(name = "club_id")
     private Club club;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id")
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PlayerForeignMapping> foreignMappings = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id")
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PlayerEligibility> eligibilities = new HashSet<>();
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -83,12 +86,10 @@ public class Player {
     @Where(clause = "archived = false")
     private List<PlayerIntel> playerIntels = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id")
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<PlayerPosition> playerPositions = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "player_id")
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PlayerSocial> playerSocials = new ArrayList<>();
 
     @Column(name = "created_by")
@@ -114,6 +115,15 @@ public class Player {
     @Column(name = "vulnerability_status")
     private Integer vulnerabilityStatus;
 
+    @Column(name = "vulnerability_status_week4")
+    private Integer vulnerabilityStatus4Weeks;
+
+    @Column(name = "vulnerability_status_week8")
+    private Integer vulnerabilityStatus8Weeks;
+
+    @Column(name = "vulnerability_status_week12")
+    private Integer vulnerabilityStatus12Weeks;
+
     @Column(name = "maturation_date")
     @Temporal(TemporalType.DATE)
     private Date maturationDate;
@@ -125,6 +135,10 @@ public class Player {
     @Enumerated(EnumType.STRING)
     @Column(name = "injury_status")
     private InjuryStatus injuryStatus;
+
+    @Column(name = "expected_return_date")
+    @Temporal(TemporalType.DATE)
+    private Date expectedReturnDate;
 
     @Version
     @Column(name = "version")

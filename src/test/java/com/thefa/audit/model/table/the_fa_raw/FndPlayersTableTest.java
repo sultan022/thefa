@@ -2,10 +2,12 @@ package com.thefa.audit.model.table.the_fa_raw;
 
 import com.thefa.audit.model.dto.player.base.*;
 import com.thefa.audit.model.dto.rerference.ClubDTO;
+import com.thefa.audit.model.dto.rerference.CountryDTO;
+import com.thefa.audit.model.dto.rerference.SquadDTO;
 import com.thefa.audit.model.shared.DataSourceType;
-import com.thefa.audit.model.shared.Gender;
 import com.thefa.audit.model.shared.SocialMediaType;
-import com.thefa.audit.model.shared.SquadType;
+import com.thefa.common.dto.shared.Gender;
+import com.thefa.common.dto.shared.SquadType;
 import org.junit.Test;
 
 import java.time.LocalDate;
@@ -32,8 +34,8 @@ public class FndPlayersTableTest {
         assertEquals("Incorrect Gender", "male", fndPlayersTable.getGender());
         assertEquals("Incorrect Profile Image", "http://dummy.com/image.jpg", fndPlayersTable.getPlayerPhotoURL());
         assertEquals("Incorrect Nationality", "England", fndPlayersTable.getNationality());
-        assertEquals("Incorrect Other Nation", "IRL", fndPlayersTable.getOtherEligibileNation());
-        assertEquals("Incorrect Other Nation 2", "PAK", fndPlayersTable.getOtherEligibileNation2());
+        assertEquals("Incorrect Other Nation", "Ireland", fndPlayersTable.getOtherEligibileNation());
+        assertEquals("Incorrect Other Nation 2", "Pakistan", fndPlayersTable.getOtherEligibileNation2());
         assertEquals("Incorrect Primary Position", Integer.valueOf(5), fndPlayersTable.getPrimaryPositionNumber());
         assertEquals("Incorrect Second Position", Integer.valueOf(4), fndPlayersTable.getSecondPositionNumber());
         assertEquals("Incorrect Third Position", Integer.valueOf(3), fndPlayersTable.getThirdPostitionNumber());
@@ -50,8 +52,9 @@ public class FndPlayersTableTest {
         PlayerDTO playerDTO = new PlayerDTO();
 
         PlayerForeignMappingDTO internalMapping = new PlayerForeignMappingDTO();
-        internalMapping.setForeignPlayerId("fapl00011000");
-        internalMapping.setSource(DataSourceType.INTERNAL);
+        playerDTO.setPlayerId("fapl00011000");
+        internalMapping.setForeignPlayerId("abc");
+        internalMapping.setSource(DataSourceType.FAN);
         playerDTO.getForeignMappings().add(internalMapping);
 
         playerDTO.setFirstName("Omer");
@@ -65,7 +68,12 @@ public class FndPlayersTableTest {
 
         playerDTO.setProfileImage("http://dummy.com/image.jpg");
 
-        playerDTO.getEligibilities().addAll(Arrays.asList("ENG", "PAK", "USA", "IRL"));
+        playerDTO.getEligibilities().addAll(Arrays.asList(
+                new CountryDTO("ENG", "England", null, null),
+                new CountryDTO("PAK", "Pakistan", null, null),
+                new CountryDTO("USA", "United States", null, null),
+                new CountryDTO("IRL", "Ireland", null, null)
+        ));
 
         PlayerPositionDTO primaryPosition = new PlayerPositionDTO();
         primaryPosition.setPositionOrder(1);
@@ -82,10 +90,10 @@ public class FndPlayersTableTest {
         playerDTO.getPlayerPositions().addAll(Arrays.asList(primaryPosition, secondPosition, thirdPosition));
 
         PlayerSquadDTO squad1 = new PlayerSquadDTO();
-        squad1.setSquad(SquadType.SENIORS);
+        squad1.setSquad(new SquadDTO(SquadType.SENIORS.name(), null, null));
 
         PlayerSquadDTO squad2 = new PlayerSquadDTO();
-        squad2.setSquad(SquadType.U21);
+        squad2.setSquad(new SquadDTO(SquadType.U21.name(), null, null));
 
         playerDTO.getPlayerSquads().addAll(Arrays.asList(squad1, squad2));
 

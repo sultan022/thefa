@@ -41,10 +41,12 @@ public class FoundationPlayersBQService extends AbstractBigQueryService {
                                 getString(row.get("firstName")),
                                 getString(row.get("lastName")),
                                 getString(row.get("gender")),
+                                null,
                                 getLocalDate(row.get("dateOfBirth")),
                                 getString(row.get("currentClubName")),
                                 getString(row.get("nationality")),
-                                DataSourceType.INTERNAL
+                                DataSourceType.INTERNAL,
+                                null
                         ))
                         .toList());
     }

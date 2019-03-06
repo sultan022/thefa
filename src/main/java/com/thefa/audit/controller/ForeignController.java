@@ -5,6 +5,7 @@ import com.thefa.audit.dao.bigquery.opta.OptaPlayersBQService;
 import com.thefa.audit.dao.bigquery.pma.PmaExternalPlayersBQService;
 import com.thefa.audit.dao.bigquery.pma.PmaPlayersBQService;
 import com.thefa.audit.dao.bigquery.scout7.Scout7PlayersBQService;
+import com.thefa.audit.dao.service.PlayerService;
 import com.thefa.audit.model.dto.foreign.FanIdDTO;
 import com.thefa.audit.model.dto.foreign.ForeignPlayerDTO;
 import com.thefa.audit.model.dto.foreign.ForeignPlayerLookupDTO;
@@ -23,7 +24,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @CommonsLog
@@ -38,6 +41,8 @@ public class ForeignController {
     private final FoundationPlayersBQService foundationPlayersBQService;
     private final PmaExternalPlayersBQService pmaExternalPlayersBQService;
 
+    private final PlayerService playerService;
+
     private final FanIdService fanIdService;
     private final ModelMapper modelMapper;
 
@@ -47,6 +52,7 @@ public class ForeignController {
                              PmaPlayersBQService pmaPlayersBQService,
                              FoundationPlayersBQService foundationPlayersBQService,
                              PmaExternalPlayersBQService pmaExternalPlayersBQService,
+                             PlayerService playerService,
                              FanIdService fanIdService,
                              ModelMapper modelMapper) {
         this.optaPlayersBQService = optaPlayersBQService;
@@ -55,12 +61,14 @@ public class ForeignController {
         this.foundationPlayersBQService = foundationPlayersBQService;
         this.pmaExternalPlayersBQService = pmaExternalPlayersBQService;
 
+        this.playerService = playerService;
         this.fanIdService = fanIdService;
         this.modelMapper = modelMapper;
     }
 
     @ApiOperation(value = "Search for Fan Id")
     @PostMapping("/fanIdSearch")
+    @Deprecated
     public DeferredResult<List<FanIdDTO>> fanIdLookup(
             @RequestBody ForeignPlayerLookupDTO foreignPlayerLookupDTO
     ) {
@@ -70,6 +78,25 @@ public class ForeignController {
 
         return DeferredResults.from(fanIdService.findPlayers(foreignPlayerLookupDTO)
                 .thenApplyAsync(fanServicePlayerDTOS -> StreamEx.of(fanServicePlayerDTOS).map(fans -> modelMapper.map(fans, FanIdDTO.class)).toList()));
+    }
+
+    @ApiOperation(value = "Search for Foundation Players")
+    @PostMapping("/foundationPlayersSearch")
+    public DeferredResult<List<ForeignPlayerDTO>> searchFoundationPlayers(
+            @RequestBody ForeignPlayerLookupDTO foreignPlayerLookupDTO) {
+
+        if (foreignPlayerLookupDTO.isEmpty()) {
+            throw new BadRequestException();
+        }
+
+        return DeferredResults.from(foundationPlayersBQService.findPlayers(foreignPlayerLookupDTO)
+                .thenApplyAsync(fndPlayers -> StreamEx.of(fndPlayers)
+                        .peek(player -> playerService.getPlayerBasicDetail(player.getForeignPlayerId())
+                                .ifPresent(playerBasicDTO -> {
+                                    player.setExistsPPS(true);
+                                    player.setProfileImage(playerBasicDTO.getProfileImage());
+                                }))
+                        .toList()));
     }
 
     @ApiOperation(value = "Search for foreign players")
@@ -84,7 +111,13 @@ public class ForeignController {
         return DeferredResults.from(StreamEx.of(optaPlayersBQService.findPlayers(foreignPlayerLookupDTO),
                 scout7PlayersBQService.findPlayers(foreignPlayerLookupDTO),
                 pmaPlayersBQService.findPlayers(foreignPlayerLookupDTO),
-                foundationPlayersBQService.findPlayers(foreignPlayerLookupDTO),
+                fanIdService.findPlayers(foreignPlayerLookupDTO)
+                        .handleAsync((list, e) -> {
+                            Optional.ofNullable(e).ifPresent(error -> log.error("Error calling Core Services", error));
+                            return Optional.ofNullable(list).orElse(Collections.emptyList());
+                        })
+                        .thenApplyAsync(fanServicePlayerDTOS -> StreamEx.of(fanServicePlayerDTOS).map(fans -> modelMapper.map(fans, FanIdDTO.class))
+                                        .map(FanIdDTO::toForeignPlayerDTO).toList()),
                 pmaExternalPlayersBQService.findPlayers(foreignPlayerLookupDTO))
                 .map(CompletableFuture::join)
                 .flatCollection(each -> each)

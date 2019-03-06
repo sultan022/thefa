@@ -2,13 +2,18 @@ package com.thefa.audit.dao.service;
 
 import com.thefa.audit.dao.repository.reference.*;
 import com.thefa.audit.model.dto.rerference.*;
+import com.thefa.audit.model.entity.reference.Country;
+import com.thefa.audit.model.entity.reference.Squad;
+import com.thefa.common.dto.shared.SquadType;
 import one.util.streamex.StreamEx;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -90,7 +95,7 @@ public class ReferenceService {
     }
 
     public List<SquadDTO> getAllSquads() {
-        return StreamEx.of(squadRepository.findAll().iterator())
+        return StreamEx.of(squadRepository.findAll(Sort.by("order")).iterator())
                 .map(entity -> modelMapper.map(entity, SquadDTO.class))
                 .toList();
     }
@@ -109,6 +114,14 @@ public class ReferenceService {
 
     public boolean doAllGradesExist(Set<String> grades) {
         return grades.size() == gradeRepository.countAllByGradeIn(grades);
+    }
+
+    public Optional<Squad> findSquad(SquadType squad) {
+        return Optional.ofNullable(squad).flatMap(s -> squadRepository.findById(s.name()));
+    }
+
+    public Optional<Country> findCountry(String code) {
+        return Optional.ofNullable(code).flatMap(countryRepository::findById);
     }
 
 }

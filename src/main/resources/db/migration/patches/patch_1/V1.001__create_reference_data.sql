@@ -217,20 +217,21 @@ INSERT INTO fa_source (source, description) VALUES ('OPTA', 'Opta Source');
 INSERT INTO fa_source (source, description) VALUES ('SCOUT7', 'Scout7 Source');
 INSERT INTO fa_source (source, description) VALUES ('PMA', 'PMA Source');
 INSERT INTO fa_source (source, description) VALUES ('INTERNAL', 'PPS Internal Source');
+INSERT INTO fa_source (source, description) VALUES ('FAN', 'FAN ID Lookup');
 INSERT INTO fa_source (source, description) VALUES ('PMA_EXTERNAL', 'Pma External');
 
 INSERT INTO fa_squad_status (status, description) VALUES ('LONG_LIST', 'Long List');
 INSERT INTO fa_squad_status (status, description) VALUES ('MONITOR', 'Monitor');
 INSERT INTO fa_squad_status (status, description) VALUES ('DO_NOT_MONITOR', 'Do Not Monitor');
 
-INSERT INTO fa_squad (squad, description) VALUES ('SENIORS', 'Senior Squad');
-INSERT INTO fa_squad (squad, description) VALUES ('U21', 'U21''s');
-INSERT INTO fa_squad (squad, description) VALUES ('U20', 'U20''s');
-INSERT INTO fa_squad (squad, description) VALUES ('U19', 'U19''s');
-INSERT INTO fa_squad (squad, description) VALUES ('U18', 'U18''s');
-INSERT INTO fa_squad (squad, description) VALUES ('U17', 'U17''s');
-INSERT INTO fa_squad (squad, description) VALUES ('U16', 'U16''s');
-INSERT INTO fa_squad (squad, description) VALUES ('U15', 'U15''s');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('SENIORS', 1, 'Senior Squad');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('U21', 2, 'U21''s');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('U20', 3, 'U20''s');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('U19', 4, 'U19''s');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('U18', 5, 'U18''s');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('U17', 6, 'U17''s');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('U16', 7, 'U16''s');
+INSERT INTO fa_squad (squad, squad_order, description) VALUES ('U15', 8, 'U15''s');
 
 INSERT INTO fa_position (position_number, description) VALUES (1, 'Goalkeeper');
 INSERT INTO fa_position (position_number, description) VALUES (2, 'Defender');

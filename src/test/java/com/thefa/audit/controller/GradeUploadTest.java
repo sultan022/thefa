@@ -4,12 +4,13 @@ import com.thefa.audit.config.AbstractIntegrationTest;
 import com.thefa.audit.dao.repository.player.PlayerGradeHistoryRepository;
 import com.thefa.audit.model.dto.player.base.PlayerDTO;
 import com.thefa.audit.model.dto.player.base.PlayerForeignMappingDTO;
+import com.thefa.audit.model.dto.player.base.PlayerGradeDTO;
 import com.thefa.audit.model.dto.player.create.CreatePlayerDTO;
 import com.thefa.audit.model.dto.player.load.PlayerGradeUploadDTO;
 import com.thefa.audit.model.entity.history.PlayerGradeHistory;
 import com.thefa.audit.model.entity.player.Player;
-import com.thefa.audit.model.shared.Gender;
 import com.thefa.common.dto.shared.ApiResponse;
+import com.thefa.common.dto.shared.Gender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,14 +47,14 @@ public class GradeUploadTest extends AbstractIntegrationTest {
         assertEquals(Long.valueOf(2), response.getData());
 
         Player player = entityManager.find(Player.class, "1");
-        assertEquals("B1", player.getPlayerGrade());
+        assertEquals("B1", player.getPlayerGrade().getGrade());
 
         List<PlayerGradeHistory> gradeHistory = playerGradeHistoryRepository.findAllByPlayerId(player.getPlayerId());
         assertEquals(1, gradeHistory.size());
         assertEquals("B1", gradeHistory.get(0).getGrade());
 
         player = entityManager.find(Player.class, "22");
-        assertEquals("A1", player.getPlayerGrade());
+        assertEquals("A1", player.getPlayerGrade().getGrade());
 
         gradeHistory = playerGradeHistoryRepository.findAllByPlayerId(player.getPlayerId());
         assertEquals(2, gradeHistory.size());
@@ -73,7 +74,7 @@ public class GradeUploadTest extends AbstractIntegrationTest {
         player.setLastName("Kamran");
         player.setDateOfBirth(LocalDate.now());
         player.setGender(Gender.M);
-        player.setPlayerGrade("B1");
+        player.setPlayerGrade(new PlayerGradeDTO("B1", null));
         player.getForeignMappings().add(new PlayerForeignMappingDTO(INTERNAL, "222"));
         return playerController.savePlayerDetails(player).getData();
     }

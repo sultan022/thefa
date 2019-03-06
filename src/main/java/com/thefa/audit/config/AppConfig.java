@@ -1,9 +1,12 @@
 package com.thefa.audit.config;
 
+import com.thefa.audit.model.dto.rerference.CountryDTO;
 import com.thefa.audit.model.entity.player.PlayerEligibility;
-import com.thefa.audit.model.shared.Gender;
+import com.thefa.audit.model.entity.reference.Country;
+import com.thefa.common.dto.shared.Gender;
 import org.modelmapper.AbstractConverter;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -56,6 +59,7 @@ public class AppConfig {
     public ModelMapper getModelMapper() {
 
         ModelMapper mapper = new ModelMapper();
+        mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
         mapper.addConverter(new AbstractConverter<LocalDate, Date>() {
             @Override
@@ -73,17 +77,19 @@ public class AppConfig {
             }
         });
 
-        mapper.addConverter(new AbstractConverter<PlayerEligibility, String>() {
+        mapper.addConverter(new AbstractConverter<PlayerEligibility, CountryDTO>() {
             @Override
-            protected String convert(PlayerEligibility source) {
-                return source == null ? null : source.getCountryCode();
+            protected CountryDTO convert(PlayerEligibility source) {
+                return source == null ? null : Optional.ofNullable(source.getCountry())
+                        .map(country -> new CountryDTO(country.getCountryCode(), country.getCountryName(), country.getPoints(), country.getRank()))
+                        .orElse(null);
             }
         });
 
-        mapper.addConverter(new AbstractConverter<String, PlayerEligibility>() {
+        mapper.addConverter(new AbstractConverter<CountryDTO, PlayerEligibility>() {
             @Override
-            protected PlayerEligibility convert(String source) {
-                return source == null ? null : new PlayerEligibility(source);
+            protected PlayerEligibility convert(CountryDTO source) {
+                return source == null ? null : new PlayerEligibility(new Country(source.getCountryCode()));
             }
         });
 

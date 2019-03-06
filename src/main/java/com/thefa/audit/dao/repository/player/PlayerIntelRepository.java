@@ -16,6 +16,10 @@ public interface PlayerIntelRepository extends PagingAndSortingRepository<Player
 
     Page<PlayerIntel> findByPlayerIdAndArchivedIsFalse(String playerId, Pageable pageable);
 
+    Page<PlayerIntel> findByPlayerIdAndIntelType(String playerId, IntelType intelType, Pageable pageable);
+
+    Page<PlayerIntel> findByPlayerId(String playerId, Pageable pageable);
+
     long countByPlayerIdAndIdInAndArchivedIsFalse(String playerId, List<Long> ids);
 
     List<PlayerIntel> findByPlayerId(String playerId);

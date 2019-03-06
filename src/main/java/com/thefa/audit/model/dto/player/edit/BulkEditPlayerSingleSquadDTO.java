@@ -1,7 +1,7 @@
 package com.thefa.audit.model.dto.player.edit;
 
 import com.thefa.audit.model.shared.SquadStatusType;
-import com.thefa.audit.model.shared.SquadType;
+import com.thefa.common.dto.shared.SquadType;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;

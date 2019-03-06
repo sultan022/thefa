@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 public class PmaExternalPlayersBQService extends AbstractBigQueryService {
 
     private final static String PLAYER_SEARCH_QUERY = "SELECT PlayerId, FirstName, LastName, DateOfBirth, ClubName " +
-            "FROM `fa_pma.pma_external_players`";
+            "FROM `source_external_pma.pma_external_players`";
 
     private final static String DATASET = "fa_pma";
     private final static String TABLE = "pma_external_players";
@@ -44,10 +44,12 @@ public class PmaExternalPlayersBQService extends AbstractBigQueryService {
                                 getString(row.get("FirstName")),
                                 getString(row.get("LastName")),
                                 null,
+                                null,
                                 getLocalDate(row.get("DateOfBirth")),
                                 getString(row.get("ClubName")),
                                 null,
-                                DataSourceType.PMA_EXTERNAL
+                                DataSourceType.PMA_EXTERNAL,
+                                null
                         ))
                         .toList());
     }
