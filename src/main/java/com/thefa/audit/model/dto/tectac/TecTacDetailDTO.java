@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 public class TecTacDetailDTO {
     private String date;
     private String videoLink;
+    private String downloadLink;
     private Double startTime;
     private Double endTime;
     private String homeTeam;

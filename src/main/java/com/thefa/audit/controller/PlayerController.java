@@ -1,11 +1,10 @@
 package com.thefa.audit.controller;
 
-import com.thefa.audit.config.converter.ImageSizeConverter;
 import com.thefa.audit.dao.service.*;
 import com.thefa.audit.model.dto.player.base.PlayerAttachmentPathDTO;
 import com.thefa.audit.model.dto.player.base.PlayerDTO;
-import com.thefa.audit.model.dto.player.base.PlayerIntelDTO;
 import com.thefa.audit.model.dto.player.base.PlayerImagesDTO;
+import com.thefa.audit.model.dto.player.base.PlayerIntelDTO;
 import com.thefa.audit.model.dto.player.create.CreatePlayerDTO;
 import com.thefa.audit.model.dto.player.edit.*;
 import com.thefa.audit.model.dto.player.history.PlayerSquadHistoryDTO;
@@ -13,6 +12,7 @@ import com.thefa.audit.model.dto.player.load.PlayerGradeUploadDTO;
 import com.thefa.audit.model.dto.player.load.PlayerStatusUploadDTO;
 import com.thefa.audit.model.shared.AttachmentType;
 import com.thefa.audit.model.shared.IntelType;
+import com.thefa.audit.service.ImageService;
 import com.thefa.audit.service.PlayerDataSyncTriggerService;
 import com.thefa.common.dto.shared.ApiResponse;
 import com.thefa.common.dto.shared.PageResponse;
@@ -26,7 +26,11 @@ import lombok.extern.apachecommons.CommonsLog;
 import one.util.streamex.StreamEx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
@@ -58,14 +62,14 @@ public class PlayerController {
     private final CloudStorageService cloudStorageService;
     private final ReferenceService referenceService;
     private final ServletContext servletContext;
-    private final ImageSizeConverter imageSizeConverter;
+    private final ImageService imageService;
 
     private final PlayerDataSyncTriggerService playerDataSyncTriggerService;
 
     private final String cdnBucket;
 
     @Autowired
-    public PlayerController(@Value("the-fa-api-dev") String bucket,
+    public PlayerController(@Value("${bucket.cdn}") String bucket,
                             PlayerDataSyncTriggerService playerDataSyncTriggerService,
                             PlayerService playerService,
                             PlayerIntelService playerIntelService,
@@ -74,7 +78,7 @@ public class PlayerController {
                             CloudStorageService cloudStorageService,
                             ReferenceService referenceService,
                             ServletContext servletContext,
-                            ImageSizeConverter imageSizeConverter) {
+                            ImageService imageService) {
         this.playerService = playerService;
         this.playerIntelService = playerIntelService;
         this.playerSquadService = playerSquadService;
@@ -82,7 +86,7 @@ public class PlayerController {
         this.referenceService = referenceService;
         this.cloudStorageService = cloudStorageService;
         this.cdnBucket = bucket;
-        this.imageSizeConverter = imageSizeConverter;
+        this.imageService = imageService;
 
         this.playerDataSyncTriggerService = playerDataSyncTriggerService;
         this.servletContext = servletContext;
@@ -96,32 +100,29 @@ public class PlayerController {
             @RequestParam("file") MultipartFile file
     ) {
 
+        if (file.isEmpty() ||
+                !Optional.ofNullable(file.getContentType())
+                        .filter(type -> type.toLowerCase().startsWith("image/")).isPresent()) {
+            throw new BadRequestException("Invalid file type");
+        }
+
+        validatePlayerExists(playerId);
+
         return DeferredResults.from(
-                CompletableFuture.supplyAsync(() -> {
-
-                    if (file.isEmpty() ||
-                            !Optional.ofNullable(file.getContentType())
-                                    .filter(type -> type.toLowerCase().startsWith("image/")).isPresent()) {
-                        throw new BadRequestException("Invalid file type");
-                    }
-
-                    validatePlayerExists(playerId);
-
-
-                    return StreamEx.of(
-                            imageSizeConverter.resize(file, 240)
-                                    .thenComposeAsync(inputStream240 -> cloudStorageService.storePublicFileAsync(inputStream240, file.getContentType(), cdnBucket, "images/240/" + playerId + ".png")),
-                            imageSizeConverter.resize(file, 60)
-                                    .thenComposeAsync(inputStream60 -> cloudStorageService.storePublicFileAsync(inputStream60, file.getContentType(), cdnBucket, "images/60/" + playerId + ".png"))
-                    ).map(CompletableFuture::join)
-                            .toListAndThen(stringList -> stringList);
-
-
-                }).thenApplyAsync(list -> playerService.updatePlayerProfileImage(playerId, list))
-                        .thenApplyAsync(playerProfileImageResponse -> {
+                StreamEx.of(
+                        imageService.resize(file, 240)
+                                .thenComposeAsync(inputStream240 -> cloudStorageService.storePublicFileAsync(
+                                        inputStream240, "image/png", cdnBucket, "images/240/" + playerId + ".png")),
+                        imageService.resize(file, 60)
+                                .thenComposeAsync(inputStream60 -> cloudStorageService.storePublicFileAsync(
+                                        inputStream60, "image/png", cdnBucket, "images/60/" + playerId + ".png"))
+                ).map(CompletableFuture::join)
+                        .toListAndThen(stringList -> playerService.updatePlayerProfileImage(playerId, stringList))
+                        .map(imagesDTO -> {
                             playerDataSyncTriggerService.fndDataUpdated(playerId);
-                            return playerProfileImageResponse.map(ApiResponse::success).<RecordNotFoundException>orElseThrow(RecordNotFoundException::new);
+                            return CompletableFuture.completedFuture(ApiResponse.success(imagesDTO));
                         })
+                        .orElseThrow(RecordNotFoundException::new)
         );
     }
 
@@ -160,19 +161,22 @@ public class PlayerController {
         );
     }
 
-    @ApiOperation(value = "Retrieve an attachment for a player")
+    @ApiOperation(value = "Retrieve an attachment for a player", response = Byte.class)
     @GetMapping(value = "/{playerId}/attachments/{attachmentId}", produces = APPLICATION_PDF_VALUE)
-    public DeferredResult<byte[]> retrieveAttachment(
+    public DeferredResult<ResponseEntity<InputStreamResource>> retrieveAttachment(
             @PathVariable() String playerId,
             @PathVariable() long attachmentId
     ) {
         return DeferredResults.from(
                 playerService.findPlayerAttachment(playerId, attachmentId)
-                        .map(attachment -> cloudStorageService.retrieveFileAsync(cdnBucket, attachment.getAttachmentPath())
-                                .thenApplyAsync(Pair::getSecond))
-                        .orElse(CompletableFuture.supplyAsync(() -> {
-                            throw new RecordNotFoundException();
-                        }))
+                    .map(attachment -> cloudStorageService.retrieveFileInputStreamAsync(cdnBucket, attachment.getAttachmentPath())
+                            .thenApplyAsync(pair -> {
+                                HttpHeaders httpHeaders = new HttpHeaders();
+                                httpHeaders.setContentType(MediaType.valueOf(pair.getFirst()));
+                                httpHeaders.setContentDispositionFormData("attachment", attachment.getFilename());
+                                return new ResponseEntity<>(new InputStreamResource(pair.getSecond()), httpHeaders, HttpStatus.OK);
+                            }))
+                .orElseThrow(RecordNotFoundException::new)
         );
     }
 

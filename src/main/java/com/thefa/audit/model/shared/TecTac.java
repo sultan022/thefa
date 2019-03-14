@@ -19,7 +19,42 @@ public enum TecTac {
     PRESS_ATTEMPTS("Press Attempts", code -> ONE.equals(code.getPressAttempt())),
     V1_DEFENSIVE_DUELS("1V1 Defensive Duels", code -> ONE.equals(code.getDefendingWonOppDuel())),
     V1_DEFENSIVE_DUELS_P_WON("1V1 Defensive Duels (WON %)", code -> ONE.equals(code.getDefendingWonOppDuel()) ||
-            ONE.equals(code.getDefendingWonDuel()));
+            ONE.equals(code.getDefendingWonDuel())),
+    AV_PLAYER_TAKEN_OUT_OF_GAME_PER_PASS("Av Player Taken Out Of Game Per Pass", code -> ONE.equals(code.getDefendersBeaten01()) ||
+            ONE.equals(code.getDefendersBeaten02()) || ONE.equals(code.getDefendersBeaten03()) || ONE.equals(code.getDefendersBeaten04()) ||
+            ONE.equals(code.getDefendersBeaten05()) || ONE.equals(code.getDefendersBeaten06()) || ONE.equals(code.getDefendersBeaten07()) ||
+            ONE.equals(code.getDefendersBeaten08()) || ONE.equals(code.getDefendersBeaten09()) || ONE.equals(code.getDefendersBeaten10()) ||
+            ONE.equals(code.getInPossession())),
+    PASS_FROM_GROUND("Pass From Ground (OP)", code -> ONE.equals(code.getPass()) || ONE.equals(code.getInPossession())),
+    THROW_IN("THROW (OP)", code -> ONE.equals(code.getThrowIn()) || ONE.equals(code.getInPossession())),
+    KICK_FROM_HAND("Kick From Hand (OP)", code -> ONE.equals(code.getSideVolleyPunt()) || ONE.equals(code.getInPossession())),
+    OUT_OF_POSSESSION_ACTIONS_P90("Out Of Possession Actions P90", code -> (ONE.equals(code.getOutOfPossessionActionP90()))),
+    GOALS_CONCEDED_P90("Goals Conceded P90", code -> ONE.equals(code.getGoalsConcededP90())),
+    DEFEND_THE_GOAL("Defend The Goal %", code -> ONE.equals(code.getDefendTheGoalOutOfPoss())
+            || ONE.equals(code.getDefendTheGoal())),
+    DEFEND_THE_AREA("Defend The Area %", code -> ONE.equals(code.getDefendTheAreaOutOfPoss())
+            || ONE.equals(code.getDefendTheArea())),
+    DEFEND_THE_SPACE("Defend The Space %", code -> ONE.equals(code.getDefendTheSpaceOutOfPoss())
+            || ONE.equals(code.getDefendTheSpace())),
+    CROSSES("Crosses", code -> ONE.equals(code.getCrosses())),
+    CROSSES_FIRST_CONTACT("Crosses (1st Contact %)", code -> ONE.equals(code.getCrosses()) || ONE.equals(code.getCrossesFirstContact())),
+    UNDER_CP("Under CP", code -> ONE.equals(code.getUnderCP())),
+    UNDER_CP_RETAINED("Under CP (% Retained)", code -> ONE.equals(code.getUnderCPPossessionRetain())
+            || ONE.equals(code.getUnderCPPossessionLost())),
+    DEFENSIVE_AERIAL_DUELS("Defensive Aerial Duels", code -> ONE.equals(code.getDefensiveAerialDuel())),
+    DEFENSIVE_AERIAL_DUELS_WON("Defensive Aerial Duels (% WON)", code -> ONE.equals(code.getDefensiveAerialOutcome()) ||
+            ONE.equals(code.getDefensiveAerialDuel())),
+    POSSESSION_PROGRESSION_RATIO("Possession Progression Ratio (%)", code -> ONE.equals(code.getPosessionLostOrRetained()) ||
+            ONE.equals(code.getSuccUnSuccPenetration())),
+    KEY_DEFENSIVE_INTERVENTION("Key Defensive Intervention", code -> ONE.equals(code.getKeyDefensiveIntervention())),
+    CREATED_DANGEROUS_POSSESSIONS("Created Dangerous Possessions", code -> ONE.equals(code.getCreatedDangPosession())),
+    CHANCES("Chances", code -> ONE.equals(code.getChance())),
+    CREATED_CHANCES("Created Chances", code -> ONE.equals(code.getTotalTeamChanceCreated())),
+    ATTACKING_ACTION("Attacking Action", code -> ONE.equals(code.getAttackingAction())),
+    SHOT_OUT_SIDE_ZONE("Shot Out Side Zone", code -> ONE.equals(code.getShotOutSideZone())),
+    SHOTS("Shots (% Outside Zone)", code -> ONE.equals(code.getShotOZ())),
+    GOALS("Goals", code -> ONE.equals(code.getGoal())),
+    RECEIVED_IN_PENALTY_BOX("Received In Penalty Box", code -> ONE.equals(code.getRecInPenaltyBox()));
 
     public final String name;
     public final Predicate<PlayerSportsCodeKind> predicate;

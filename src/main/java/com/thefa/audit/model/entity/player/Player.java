@@ -3,6 +3,7 @@ package com.thefa.audit.model.entity.player;
 import com.thefa.audit.model.entity.reference.Club;
 import com.thefa.audit.model.entity.reference.Grade;
 import com.thefa.audit.model.shared.InjuryStatus;
+import com.thefa.audit.model.shared.IntelType;
 import com.thefa.audit.model.shared.MaturationStatus;
 import com.thefa.common.dto.shared.Gender;
 import lombok.Data;
@@ -143,5 +144,17 @@ public class Player {
     @Version
     @Column(name = "version")
     private Integer version;
+
+    public Integer getEducationIntelNoteLength() {
+        return playerIntels.stream().filter(playerIntel -> (!playerIntel.isArchived() && playerIntel.getIntelType() == IntelType.EDUCATION)).toArray().length;
+    }
+
+    public Integer getGeneralIntelNoteLength() {
+        return playerIntels.stream().filter(playerIntel -> (!playerIntel.isArchived() && playerIntel.getIntelType() == IntelType.GENERAL)).toArray().length;
+    }
+
+    public Integer getEligibilityIntelNoteLength() {
+        return playerIntels.stream().filter(playerIntel -> (!playerIntel.isArchived() && playerIntel.getIntelType() == IntelType.ELIGIBILITY)).toArray().length;
+    }
 
 }

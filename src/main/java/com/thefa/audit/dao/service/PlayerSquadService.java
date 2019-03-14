@@ -28,10 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.domain.Sort.Order.desc;
@@ -185,7 +182,7 @@ public class PlayerSquadService {
                             Set<PlayerSquad> playerSquads = player.getPlayerSquads();
 
                             Set<SquadType> dbSquads = StreamEx.of(playerSquads).map(PlayerSquad::getSquadType).toSet();
-                            Set<SquadType> uiSquads = StreamEx.of(dto.getSquads()).map(EditPlayerSquadDTO::getSquad).toSet();
+                            Set<SquadType> uiSquads = StreamEx.ofNullable(dto.getSquads()).flatMap(list -> StreamEx.of(list).map(EditPlayerSquadDTO::getSquad)).toSet();
 
                             // Updated Squads
                             Set<EditPlayerSquadDTO> updatedSquads = StreamEx.of(dto.getSquads())

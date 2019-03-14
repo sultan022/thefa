@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.cloud.gcp.data.datastore.core.mapping.Entity;
 import org.springframework.data.annotation.Id;
 
+import java.util.Optional;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,6 +18,7 @@ public class PlayerSportsCodeKind {
     private String id;
     private String fixtureId;
     private String fileName;
+    private String fileId;
     private String date;
     private String team;
     private String playerId;
@@ -61,5 +64,40 @@ public class PlayerSportsCodeKind {
     private Integer chanceCreated;
     private Integer createdDangPosession;
     private Integer counterPressAttempt;
+    private Integer defendersBeaten01;
+    private Integer defendersBeaten02;
+    private Integer defendersBeaten03;
+    private Integer defendersBeaten04;
+    private Integer defendersBeaten05;
+    private Integer defendersBeaten06;
+    private Integer defendersBeaten07;
+    private Integer defendersBeaten08;
+    private Integer defendersBeaten09;
+    private Integer defendersBeaten10;
+    private Integer pass;
+    private Integer throwIn;
+    private Integer sideVolleyPunt;
+    private Integer outOfPossessionActionP90;
+    private Integer goalsConcededP90;
+    private Integer defendTheGoalOutOfPoss;
+    private Integer defendTheGoal;
+    private Integer defendTheAreaOutOfPoss;
+    private Integer defendTheArea;
+    private Integer defendTheSpaceOutOfPoss;
+    private Integer defendTheSpace;
+    private Integer underCPPossessionRetain;
+    private Integer underCPPossessionLost;
+    private Integer crossesFirstContact;
+    private Integer totalTeamChanceCreated;
+    private Integer attackingAction;
+    private Integer shotOutSideZone;
+    private Integer shotOZ;
+    private Integer goal;
+    private Integer recInPenaltyBox;
+
+    public String getVideoId() {
+        return fileId + "_" + Optional.ofNullable(startTime).orElse(0.0) + "_" + Optional.ofNullable(endTime).orElse(0.0);
+
+    }
 
 }

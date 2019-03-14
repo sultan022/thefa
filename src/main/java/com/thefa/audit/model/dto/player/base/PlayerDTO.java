@@ -70,6 +70,12 @@ public class PlayerDTO {
 
     private LocalDate expectedReturnDate;
 
+    private Integer educationIntelNoteLength;
+
+    private Integer generalIntelNoteLength;
+
+    private Integer eligibilityIntelNoteLength;
+
     private String createdBy;
 
     private ZonedDateTime createdAt;

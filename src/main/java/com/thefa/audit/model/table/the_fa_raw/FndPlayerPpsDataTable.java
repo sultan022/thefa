@@ -36,6 +36,8 @@ public class FndPlayerPpsDataTable {
 
     private String injuryStatus;
 
+    private String injuryDescription;
+
     private String expectedReturnDate;
 
     private String lastModified;
@@ -56,6 +58,7 @@ public class FndPlayerPpsDataTable {
         fndPlayerPpsDataTable.vulnerabilityStatus8Weeks = playerDTO.getVulnerabilityStatus8Weeks();
         fndPlayerPpsDataTable.vulnerabilityStatus12Weeks = playerDTO.getVulnerabilityStatus12Weeks();
         fndPlayerPpsDataTable.injuryStatus = Optional.ofNullable(playerDTO.getInjuryStatus()).map(InjuryStatus::name).orElse(null);
+        fndPlayerPpsDataTable.injuryDescription = Optional.ofNullable(playerDTO.getInjuryStatus()).map(i -> i.description).orElse(null);
         fndPlayerPpsDataTable.expectedReturnDate = Optional.ofNullable(playerDTO.getExpectedReturnDate()).map(LocalDate::toString).orElse(null);
         fndPlayerPpsDataTable.lastModified = Optional.ofNullable(lastModified).orElseGet(() -> Timestamp.now().toString());
 
